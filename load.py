@@ -1,6 +1,8 @@
 import os
 import sys
 
+print(sys.version)
+
 working_dir_path = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(working_dir_path)
 sys.path.extend(["/home/h-ishida/.pyenv/versions/3.10.2/lib/python3.10/site-packages"])
@@ -85,26 +87,40 @@ if __name__ == "__main__":
     num_samples = int(sys.argv[sys.argv.index("--") + 3])
 
     # prepare material
-    p = Path("~/python/random-texture/texture_dataset/Wood027_2K")
-    fbmat = FileBasedMaterial.from_ambientcg_path(p)
-    add_named_material(fbmat)
+    p = Path("~/python/random-texture/texture_dataset/Wood001_2K")
+    fbmat_wood = FileBasedMaterial.from_ambientcg_path(p)
+    add_named_material(fbmat_wood, scale=(1, 1, 1))
+
+    p = Path("~/python/random-texture/texture_dataset/Carpet001_2K/")
+    fbmat_carpet = FileBasedMaterial.from_ambientcg_path(p)
+    add_named_material(fbmat_carpet, scale=(0.1, 0.1, 0.1))
 
     # Render Setting
     scene = bpy.data.scenes["Scene"]
     utils.clean_objects()
 
-    # Scene Building
-    obj = utils.create_smooth_monkey(location=(0, 0, 0.0), name="Suzanne")
-    obj.data.materials.append(bpy.data.materials[fbmat.name])
-    add_named_material(fbmat)
+    bpy.ops.mesh.primitive_cube_add(location=(0.0, 0.0, 0.8))
+    obj = bpy.context.object
+    obj.scale = (0.8, 0.5, 0.02)
+    obj.data.materials.append(bpy.data.materials[fbmat_wood.name])
 
-    camera_object = utils.create_camera(location=(1.0, 1.0, 5.0))
+    wall = utils.create_plane(
+        size=12.0,
+        location=(0.0, -2.0, 0.0),
+        rotation=(math.pi * 90.0 / 180.0, 0.0, 0.0),
+        name="Wall",
+    )
+
+    floor = utils.create_plane(size=12.0, name="Floor")
+    floor.data.materials.append(bpy.data.materials[fbmat_carpet.name])
+
+    camera_object = utils.create_camera(location=(1.0, 3.0, 5.0))
 
     utils.add_track_to_constraint(camera_object, obj)
     utils.set_camera_params(camera_object.data, obj, lens=50.0)
 
-    utils.create_sun_light(rotation=(0.0, math.pi * 0.5, -math.pi * 0.1))
+    utils.create_area_light(rotation=(0.0, math.pi * 0.1, -math.pi * 0.1))
 
-    resolution_percentage = 30
+    resolution_percentage = 50
     utils.set_output_properties(scene, resolution_percentage, output_file_path)
     utils.set_cycles_renderer(scene, camera_object, num_samples)
