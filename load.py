@@ -1,20 +1,21 @@
 import os
 import sys
 
-print(sys.version)
-
 working_dir_path = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(working_dir_path)
 sys.path.extend(["/home/h-ishida/.pyenv/versions/3.10.2/lib/python3.10/site-packages"])
 
+import random
 import math
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
+import yaml
 
 import bpy
 
 import randblend.utils as utils
+from randblend.dataset import Dataset
 
 OptionalPath = Optional[Path]
 
@@ -80,18 +81,36 @@ def add_named_material(
 
 
 if __name__ == "__main__":
+    dataset = Dataset.construct(Path("./texture_dataset/metainfo.yaml"))
+    materials_table_cand = dataset.filter_by_categories(
+        ("Wood", "Metal", "Leather", "Fabric", "Grass", "MetalPlates")
+    )
+    materials_floor_cand = dataset.filter_by_categories(
+        ("Carpet", "WoodFloor", "Asphalt", "Rocks", "Ground", "OfficeCeiling")
+    )
+
+    material_table = random.choice(materials_table_cand)
+    material_floor = random.choice(materials_floor_cand)
 
     # Args
-    output_file_path = bpy.path.relpath(str(sys.argv[sys.argv.index("--") + 1]))
-    resolution_percentage = int(sys.argv[sys.argv.index("--") + 2])
-    num_samples = int(sys.argv[sys.argv.index("--") + 3])
+    output_file_path = bpy.path.relpath("./out-")
+    resolution_percentage = 40
+    num_samples = 16
 
     # prepare material
-    p = Path("~/python/random-texture/texture_dataset/Wood001_2K")
+    resolution = "_2K"  # TODO: from yamlfile
+    p = Path(
+        "~/python/random-texture/texture_dataset/{}".format(material_table + resolution)
+    )
+    # assert p.is_dir(), str(p)
     fbmat_wood = FileBasedMaterial.from_ambientcg_path(p)
     add_named_material(fbmat_wood, scale=(1, 1, 1))
 
-    p = Path("~/python/random-texture/texture_dataset/Carpet001_2K/")
+    resolution = "_2K"  # TODO: from yamlfile
+    p = Path(
+        "~/python/random-texture/texture_dataset/{}".format(material_floor + resolution)
+    )
+    # assert p.is_dir(), str(p)
     fbmat_carpet = FileBasedMaterial.from_ambientcg_path(p)
     add_named_material(fbmat_carpet, scale=(0.1, 0.1, 0.1))
 

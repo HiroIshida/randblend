@@ -90,12 +90,12 @@ class DownloadInfo:
     raw_link: str
 
     @property
-    def quarity(self) -> str:
+    def resolution(self) -> str:
         matches: List[str] = re.findall(r"(\w+)-(\w+)", self.attribute)
         return matches[0][0]
 
     def download(self, output_dir: Union[str, pathlib.Path] = ".") -> pathlib.Path:
-        name = "{}_{}.{}".format(self.assetid, self.quarity, "zip")
+        name = "{}_{}.{}".format(self.assetid, self.resolution, "zip")
         if isinstance(output_dir, str):
             output_dir = pathlib.Path(output_dir)
         fullpath = (output_dir / name).expanduser()
@@ -164,7 +164,7 @@ if __name__ == "__main__":
     data_dir = pathlib.Path("./texture_dataset")
     data_dir.mkdir(exist_ok=True)
 
-    queries = [Query(category=cat) for cat in ["Wood", "Fabric", "Floor", "Carpet"]]
+    queries = [Query()]  # all files
 
     for q in queries:
         metainfo_dict: Dict[str, DownloadInfo] = {}
@@ -174,6 +174,7 @@ if __name__ == "__main__":
                 continue
             metainfo = get_metainfo(download_info.assetid)
             metainfo["link"] = download_info.raw_link
+            metainfo["resolution"] = download_info.resolution
             metainfo_dict[download_info.assetid] = metainfo  # type: ignore
 
             zip_path = download_info.download(output_dir=data_dir)
