@@ -5,14 +5,15 @@ working_dir_path = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(working_dir_path)
 sys.path.extend(["/home/h-ishida/.pyenv/versions/3.10.2/lib/python3.10/site-packages"])
 
-import random
 import math
+import random
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
-import yaml
+from typing import Optional, Tuple
 
 import bpy
+import mathutils
+import yaml
 
 import randblend.utils as utils
 from randblend.dataset import Dataset
@@ -80,11 +81,19 @@ def add_named_material(
     return mat
 
 
+def look_at(obj_camera, point: mathutils.Vector):
+    # https://blender.stackexchange.com/questions/5210
+    if isinstance(point, Tuple):
+        point = mathutils.Vector(point)
+    loc_camera = obj_camera.matrix_world.to_translation()
+    direction = point - loc_camera
+    rot_quat = direction.to_track_quat("-Z", "Y")
+    obj_camera.rotation_euler = rot_quat.to_euler()
+
+
 if __name__ == "__main__":
     dataset = Dataset.construct(Path("./texture_dataset/metainfo.yaml"))
-    materials_table_cand = dataset.filter_by_categories(
-        ("Wood", "Metal", "Leather", "Fabric", "Grass", "MetalPlates")
-    )
+    materials_table_cand = dataset.filter_by_categories(("Wood",))
     materials_floor_cand = dataset.filter_by_categories(
         ("Carpet", "WoodFloor", "Asphalt", "Rocks", "Ground", "OfficeCeiling")
     )
@@ -102,7 +111,6 @@ if __name__ == "__main__":
     p = Path(
         "~/python/random-texture/texture_dataset/{}".format(material_table + resolution)
     )
-    # assert p.is_dir(), str(p)
     fbmat_wood = FileBasedMaterial.from_ambientcg_path(p)
     add_named_material(fbmat_wood, scale=(1, 1, 1))
 
@@ -120,7 +128,7 @@ if __name__ == "__main__":
 
     bpy.ops.mesh.primitive_cube_add(location=(0.0, 0.0, 0.8))
     obj = bpy.context.object
-    obj.scale = (0.8, 0.5, 0.02)
+    obj.scale = (0.8, 0.5, 0.03)
     obj.data.materials.append(bpy.data.materials[fbmat_wood.name])
 
     wall = utils.create_plane(
@@ -133,13 +141,14 @@ if __name__ == "__main__":
     floor = utils.create_plane(size=12.0, name="Floor")
     floor.data.materials.append(bpy.data.materials[fbmat_carpet.name])
 
-    camera_object = utils.create_camera(location=(1.0, 3.0, 5.0))
+    camera_object = utils.create_camera(location=(0.0, -0.6, 2.1), name="camera")
+    look_at(camera_object, (0, 0.3, 0))
 
-    utils.add_track_to_constraint(camera_object, obj)
+    # utils.add_track_to_constraint(camera_object, obj)
+
     utils.set_camera_params(camera_object.data, obj, lens=50.0)
+    utils.create_area_light(rotation=(0.0, math.pi * 0.1, -math.pi * 0.1), strength=100)
 
-    utils.create_area_light(rotation=(0.0, math.pi * 0.1, -math.pi * 0.1))
-
-    resolution_percentage = 50
+    resolution_percentage = 20
     utils.set_output_properties(scene, resolution_percentage, output_file_path)
     utils.set_cycles_renderer(scene, camera_object, num_samples)

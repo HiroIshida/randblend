@@ -2,8 +2,7 @@ from setuptools import find_packages, setup
 
 setup_requires = []
 
-install_requires = [
-]
+install_requires = []
 
 setup(
     name="randblend",
