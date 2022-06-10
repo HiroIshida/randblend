@@ -1,9 +1,7 @@
 import pathlib
 
 import bpy
-import trimesh
 
-from randblend.utils import create_mesh_from_pydata
 from randblend.world_description import FileBasedObject
 
 # def create_mesh_from_file(

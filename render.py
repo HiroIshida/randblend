@@ -16,11 +16,7 @@ import mathutils
 
 import randblend.utils as utils
 from randblend.dataset import Dataset
-from randblend.path import (
-    get_mesh_dataset_path,
-    get_texture_dataset_path,
-    get_texture_metainfo_path,
-)
+from randblend.path import get_texture_dataset_path, get_texture_metainfo_path
 from randblend.spawn import create_obj
 from randblend.world_description import FileBasedObject, Pose
 
