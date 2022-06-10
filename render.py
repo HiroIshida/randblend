@@ -16,6 +16,7 @@ import mathutils
 
 import randblend.utils as utils
 from randblend.dataset import Dataset
+from randblend.path import get_texture_dataset_path, get_texture_metainfo_path
 
 OptionalPath = Optional[Path]
 
@@ -31,7 +32,15 @@ class FileBasedMaterial:
     ambientocclusion: OptionalPath = None
 
     @classmethod
-    def from_ambientcg_path(cls, base_dir_path: Path):
+    def from_ambientcg_id(cls, texture_id: str) -> "FileBasedMaterial":
+        dataset_path = get_texture_dataset_path()
+        resolution = "_2K"  # TODO(load from yaml??"
+        path = dataset_path / (texture_id + resolution)
+        assert path.is_dir()
+        return cls.from_ambientcg_path(path)
+
+    @classmethod
+    def from_ambientcg_path(cls, base_dir_path: Path) -> "FileBasedMaterial":
         base_dir_path = base_dir_path.expanduser()
         data_id = base_dir_path.name
         extension = "jpg"  # TODO(HiroIshida) png
@@ -91,7 +100,8 @@ def look_at(obj_camera, point: mathutils.Vector):
 
 
 if __name__ == "__main__":
-    dataset = Dataset.construct(Path("./texture_dataset/metainfo.yaml"))
+    yaml_path = get_texture_metainfo_path()
+    dataset = Dataset.construct(yaml_path)
     materials_table_cand = dataset.filter_by_categories(("Wood",))
     materials_floor_cand = dataset.filter_by_categories(
         ("Carpet", "WoodFloor", "Asphalt", "Rocks", "Ground", "OfficeCeiling")
@@ -106,19 +116,10 @@ if __name__ == "__main__":
     num_samples = 16
 
     # prepare material
-    resolution = "_2K"  # TODO: from yamlfile
-    p = Path(
-        "~/python/random-texture/texture_dataset/{}".format(material_table + resolution)
-    )
-    fbmat_wood = FileBasedMaterial.from_ambientcg_path(p)
+    fbmat_wood = FileBasedMaterial.from_ambientcg_id(material_table)
     add_named_material(fbmat_wood, scale=(1, 1, 1))
 
-    resolution = "_2K"  # TODO: from yamlfile
-    p = Path(
-        "~/python/random-texture/texture_dataset/{}".format(material_floor + resolution)
-    )
-    # assert p.is_dir(), str(p)
-    fbmat_carpet = FileBasedMaterial.from_ambientcg_path(p)
+    fbmat_carpet = FileBasedMaterial.from_ambientcg_id(material_floor)
     add_named_material(fbmat_carpet, scale=(0.1, 0.1, 0.1))
 
     # Render Setting
@@ -140,7 +141,7 @@ if __name__ == "__main__":
     floor = utils.create_plane(size=12.0, name="Floor")
     floor.data.materials.append(bpy.data.materials[fbmat_carpet.name])
 
-    camera_object = utils.create_camera(location=(0.0, -0.6, 2.1), name="camera")
+    camera_object = utils.create_camera(location=(0.0, -0.6, 3.0))
     look_at(camera_object, (0, 0.3, 0))
 
     # utils.add_track_to_constraint(camera_object, obj)
