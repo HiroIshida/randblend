@@ -1,5 +1,5 @@
 #!/bin/bash
+isort . 
 black .
 flake8 .
-isort . 
 

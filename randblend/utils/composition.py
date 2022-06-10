@@ -1,7 +1,6 @@
 import bpy
 
-from randblend.utils.node import (arrange_nodes, clean_nodes,
-                                  set_socket_value_range)
+from randblend.utils.node import arrange_nodes, clean_nodes, set_socket_value_range
 
 
 def add_split_tone_node_group() -> bpy.types.NodeGroup:

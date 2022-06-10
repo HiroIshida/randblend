@@ -2,8 +2,12 @@ from typing import Tuple
 
 import bpy
 
-from randblend.utils.node import (arrange_nodes, clean_nodes,
-                                  create_frame_node, set_socket_value_range)
+from randblend.utils.node import (
+    arrange_nodes,
+    clean_nodes,
+    create_frame_node,
+    set_socket_value_range,
+)
 
 
 def create_texture_node(
