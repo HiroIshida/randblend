@@ -16,3 +16,8 @@ def get_texture_dataset_path():
 def get_texture_metainfo_path():
     path = get_texture_dataset_path() / "metainfo.yaml"
     return path
+
+
+def get_mesh_dataset_path():
+    path = get_texture_dataset_path() / "mesh" / "gso_dataset" / "GSO"
+    return path

@@ -16,7 +16,13 @@ import mathutils
 
 import randblend.utils as utils
 from randblend.dataset import Dataset
-from randblend.path import get_texture_dataset_path, get_texture_metainfo_path
+from randblend.path import (
+    get_mesh_dataset_path,
+    get_texture_dataset_path,
+    get_texture_metainfo_path,
+)
+from randblend.spwan import create_obj
+from randblend.world_description import FileBasedObject, Pose
 
 OptionalPath = Optional[Path]
 
@@ -112,7 +118,7 @@ if __name__ == "__main__":
 
     # Args
     output_file_path = bpy.path.relpath("./out-")
-    resolution_percentage = 40
+    resolution_percentage = 60
     num_samples = 16
 
     # prepare material
@@ -125,6 +131,12 @@ if __name__ == "__main__":
     # Render Setting
     scene = bpy.data.scenes["Scene"]
     utils.clean_objects()
+
+    pose = Pose(translation=(0, 0, 0.9), orientation=(1.0, 0.0, 0.0, 0.0))
+    fbobject = FileBasedObject.from_gs_path(
+        Path("~/.randblend/mesh/gso_dataset/GSO/tmp").expanduser(), pose=pose
+    )
+    create_obj(scene, fbobject)
 
     bpy.ops.mesh.primitive_cube_add(location=(0.0, 0.0, 0.8))
     obj = bpy.context.object
@@ -146,9 +158,8 @@ if __name__ == "__main__":
 
     # utils.add_track_to_constraint(camera_object, obj)
 
-    utils.set_camera_params(camera_object.data, obj, lens=50.0)
+    # utils.set_camera_params(camera_object.data, obj, lens=50.0)
     utils.create_area_light(rotation=(0.0, math.pi * 0.1, -math.pi * 0.1), strength=100)
 
-    resolution_percentage = 20
     utils.set_output_properties(scene, resolution_percentage, output_file_path)
     utils.set_cycles_renderer(scene, camera_object, num_samples)

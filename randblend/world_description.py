@@ -3,7 +3,7 @@ import queue
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Tuple, Type, TypeVar
+from typing import Dict, List, Optional, Tuple, Type, TypeVar
 
 DictableT = TypeVar("DictableT", bound="Dictable")
 
@@ -72,6 +72,10 @@ class Pose(Dictable):
     translation: Tuple[float, float, float]
     orientation: Tuple[float, float, float, float]
 
+    @classmethod
+    def identity(cls) -> "Pose":
+        return cls((0.0, 0.0, 0.0), (1.0, 0.0, 0.0, 0.0))
+
 
 class PhysicalObject(Dictable):
     pass
@@ -86,6 +90,29 @@ class FileBasedObject(PhysicalObject):
     def __post_init__(self):
         path = Path(self.path)
         assert path.is_absolute()
+
+    @classmethod
+    def from_gs_path(
+        cls, path: Path, pose: Optional[Pose] = None, is_visual: bool = True
+    ) -> "FileBasedObject":
+
+        path = path.expanduser()
+        assert path.is_dir()
+
+        json_path = path / "data.json"
+        with json_path.open(mode="r") as f:
+            info = json.load(f)
+
+        name = info["id"]
+        if is_visual:
+            mesh_path = path / "visual_geometry.obj"
+        else:
+            mesh_path = path / "collision_geometry.obj"
+
+        if pose is None:
+            pose = Pose.identity()
+
+        return cls(name, mesh_path, pose)
 
 
 @dataclass
