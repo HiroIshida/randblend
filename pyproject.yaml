@@ -1,5 +1,6 @@
 [tool.black]
 line-length = 100
+extend-exclude = "randblend/utils"
 
 [tool.isort]
 profile = "black"

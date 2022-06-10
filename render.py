@@ -13,7 +13,6 @@ from typing import Optional, Tuple
 
 import bpy
 import mathutils
-import yaml
 
 import randblend.utils as utils
 from randblend.dataset import Dataset

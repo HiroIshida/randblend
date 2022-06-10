@@ -1,5 +1,6 @@
-import bpy
 from typing import Tuple
+
+import bpy
 
 
 def create_camera(location: Tuple[float, float, float]) -> bpy.types.Object:
@@ -8,12 +9,14 @@ def create_camera(location: Tuple[float, float, float]) -> bpy.types.Object:
     return bpy.context.object
 
 
-def set_camera_params(camera: bpy.types.Camera,
-                      focus_target_object: bpy.types.Object,
-                      lens: float = 85.0,
-                      fstop: float = 1.4) -> None:
+def set_camera_params(
+    camera: bpy.types.Camera,
+    focus_target_object: bpy.types.Object,
+    lens: float = 85.0,
+    fstop: float = 1.4,
+) -> None:
     # Simulate Sony's FE 85mm F1.4 GM
-    camera.sensor_fit = 'HORIZONTAL'
+    camera.sensor_fit = "HORIZONTAL"
     camera.sensor_width = 36.0
     camera.sensor_height = 24.0
     camera.lens = lens

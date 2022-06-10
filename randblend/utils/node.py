@@ -1,14 +1,17 @@
-import bpy
-import sys
 import math
+import sys
 from typing import Iterable
 
+import bpy
 
-def create_frame_node(node_tree: bpy.types.NodeTree,
-                      nodes: Iterable[bpy.types.Node] = [],
-                      name: str = "Frame",
-                      label: str = "Frame") -> bpy.types.Node:
-    frame_node = node_tree.nodes.new(type='NodeFrame')
+
+def create_frame_node(
+    node_tree: bpy.types.NodeTree,
+    nodes: Iterable[bpy.types.Node] = [],
+    name: str = "Frame",
+    label: str = "Frame",
+) -> bpy.types.Node:
+    frame_node = node_tree.nodes.new(type="NodeFrame")
     frame_node.name = name
     frame_node.label = label
 
@@ -18,10 +21,12 @@ def create_frame_node(node_tree: bpy.types.NodeTree,
     return frame_node
 
 
-def set_socket_value_range(socket: bpy.types.NodeSocket,
-                           default_value: float = 0.0,
-                           min_value: float = 0.0,
-                           max_value: float = 1.0) -> None:
+def set_socket_value_range(
+    socket: bpy.types.NodeSocket,
+    default_value: float = 0.0,
+    min_value: float = 0.0,
+    max_value: float = 1.0,
+) -> None:
     assert socket.type == "VALUE"
 
     socket.default_value = default_value
@@ -76,47 +81,61 @@ def arrange_nodes(node_tree: bpy.types.NodeTree, verbose: bool = False) -> None:
                 if C >= target_space * threshold_factor:
                     continue
 
-                lagrange = C / (grad_C_x_from * grad_C_x_from + grad_C_x_to * grad_C_x_to)
+                lagrange = C / (
+                    grad_C_x_from * grad_C_x_from + grad_C_x_to * grad_C_x_to
+                )
                 delta_x_from = -lagrange * grad_C_x_from
                 delta_x_to = -lagrange * grad_C_x_to
 
                 link.from_node.location[0] += k * delta_x_from
                 link.to_node.location[0] += k * delta_x_to
 
-                squared_deltas_sum += k * k * (delta_x_from * delta_x_from + delta_x_to * delta_x_to)
+                squared_deltas_sum += (
+                    k * k * (delta_x_from * delta_x_from + delta_x_to * delta_x_to)
+                )
 
         if fix_vertical_location:
             k = 0.5 if not second_stage else 0.05
             socket_offset = 20.0
 
-            def get_from_socket_index(node: bpy.types.Node, node_socket: bpy.types.NodeSocket) -> int:
+            def get_from_socket_index(
+                node: bpy.types.Node, node_socket: bpy.types.NodeSocket
+            ) -> int:
                 for i in range(len(node.outputs)):
                     if node.outputs[i] == node_socket:
                         return i
                 assert False
 
-            def get_to_socket_index(node: bpy.types.Node, node_socket: bpy.types.NodeSocket) -> int:
+            def get_to_socket_index(
+                node: bpy.types.Node, node_socket: bpy.types.NodeSocket
+            ) -> int:
                 for i in range(len(node.inputs)):
                     if node.inputs[i] == node_socket:
                         return i
                 assert False
 
             for link in node_tree.links:
-                from_socket_index = get_from_socket_index(link.from_node, link.from_socket)
+                from_socket_index = get_from_socket_index(
+                    link.from_node, link.from_socket
+                )
                 to_socket_index = get_to_socket_index(link.to_node, link.to_socket)
                 y_from = link.from_node.location[1] - socket_offset * from_socket_index
                 y_to = link.to_node.location[1] - socket_offset * to_socket_index
                 C = y_from - y_to
                 grad_C_y_from = 1.0
                 grad_C_y_to = -1.0
-                lagrange = C / (grad_C_y_from * grad_C_y_from + grad_C_y_to * grad_C_y_to)
+                lagrange = C / (
+                    grad_C_y_from * grad_C_y_from + grad_C_y_to * grad_C_y_to
+                )
                 delta_y_from = -lagrange * grad_C_y_from
                 delta_y_to = -lagrange * grad_C_y_to
 
                 link.from_node.location[1] += k * delta_y_from
                 link.to_node.location[1] += k * delta_y_to
 
-                squared_deltas_sum += k * k * (delta_y_from * delta_y_from + delta_y_to * delta_y_to)
+                squared_deltas_sum += (
+                    k * k * (delta_y_from * delta_y_from + delta_y_to * delta_y_to)
+                )
 
         if fix_overlaps and second_stage:
             k = 0.9
@@ -166,28 +185,41 @@ def arrange_nodes(node_tree: bpy.types.NodeTree, verbose: bool = False) -> None:
                     if C_x > C_y:
                         grad_C_x_1 = 1.0 if cx_1 - cx_2 >= 0.0 else -1.0
                         grad_C_x_2 = -1.0 if cx_1 - cx_2 >= 0.0 else 1.0
-                        lagrange = C_x / (grad_C_x_1 * grad_C_x_1 + grad_C_x_2 * grad_C_x_2)
+                        lagrange = C_x / (
+                            grad_C_x_1 * grad_C_x_1 + grad_C_x_2 * grad_C_x_2
+                        )
                         delta_x_1 = -lagrange * grad_C_x_1
                         delta_x_2 = -lagrange * grad_C_x_2
 
                         node_1.location[0] += k * delta_x_1
                         node_2.location[0] += k * delta_x_2
 
-                        squared_deltas_sum += k * k * (delta_x_1 * delta_x_1 + delta_x_2 * delta_x_2)
+                        squared_deltas_sum += (
+                            k * k * (delta_x_1 * delta_x_1 + delta_x_2 * delta_x_2)
+                        )
                     else:
                         grad_C_y_1 = 1.0 if cy_1 - cy_2 >= 0.0 else -1.0
                         grad_C_y_2 = -1.0 if cy_1 - cy_2 >= 0.0 else 1.0
-                        lagrange = C_y / (grad_C_y_1 * grad_C_y_1 + grad_C_y_2 * grad_C_y_2)
+                        lagrange = C_y / (
+                            grad_C_y_1 * grad_C_y_1 + grad_C_y_2 * grad_C_y_2
+                        )
                         delta_y_1 = -lagrange * grad_C_y_1
                         delta_y_2 = -lagrange * grad_C_y_2
 
                         node_1.location[1] += k * delta_y_1
                         node_2.location[1] += k * delta_y_2
 
-                        squared_deltas_sum += k * k * (delta_y_1 * delta_y_1 + delta_y_2 * delta_y_2)
+                        squared_deltas_sum += (
+                            k * k * (delta_y_1 * delta_y_1 + delta_y_2 * delta_y_2)
+                        )
 
         if verbose:
-            print("Iteration #" + str(i) + ": " + str(previous_squared_deltas_sum - squared_deltas_sum))
+            print(
+                "Iteration #"
+                + str(i)
+                + ": "
+                + str(previous_squared_deltas_sum - squared_deltas_sum)
+            )
 
         # Check the termination conditiion
         if math.fabs(previous_squared_deltas_sum - squared_deltas_sum) < epsilon:
