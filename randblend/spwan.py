@@ -1,5 +1,4 @@
 import pathlib
-from abc import ABC, abstractmethod
 
 import bpy
 import trimesh
