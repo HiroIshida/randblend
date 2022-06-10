@@ -1,6 +1,7 @@
 import pathlib
 
 import bpy
+from scipy.spatial.transform import Rotation
 
 from randblend.world_description import FileBasedObject
 
@@ -21,11 +22,13 @@ from randblend.world_description import FileBasedObject
 
 
 def create_obj(scene: bpy.types.Scene, fbobj: FileBasedObject) -> bpy.types.Object:
-    # https://blender.stackexchange.com/questions/24133/modify-obj-after-import-using-python
     mesh_path = pathlib.Path(fbobj.path).expanduser()
-    # bpy.ops.import_scene.obj(filepath=str(mesh_path), use_split_objects=False)
 
     bpy.ops.import_scene.obj(filepath=str(mesh_path))
     objs = bpy.context.selected_objects
     obj = objs[-1]
     obj.location = fbobj.pose.translation
+
+    rot = Rotation.from_quat(fbobj.pose.orientation)
+    obj.rotation_euler = tuple(rot.as_euler("zyx").tolist())
+    return obj

@@ -13,6 +13,8 @@ from typing import Optional, Tuple
 
 import bpy
 import mathutils
+import numpy as np
+from scipy.spatial.transform import Rotation
 
 import randblend.utils as utils
 from randblend.dataset import Dataset
@@ -114,7 +116,7 @@ if __name__ == "__main__":
 
     # Args
     output_file_path = bpy.path.relpath("./out-")
-    resolution_percentage = 60
+    resolution_percentage = 30
     num_samples = 16
 
     # prepare material
@@ -128,17 +130,22 @@ if __name__ == "__main__":
     scene = bpy.data.scenes["Scene"]
     utils.clean_objects()
 
-    pose = Pose(translation=(0, 0, 0.9), orientation=(1.0, 0.0, 0.0, 0.0))
-    fbobject = FileBasedObject.from_gs_path(
-        Path("~/.randblend/mesh/gso_dataset/GSO/tmp").expanduser(), pose=pose
-    )
-    create_obj(scene, fbobject)
-
+    # create table
     bpy.ops.mesh.primitive_cube_add(location=(0.0, 0.0, 0.8))
     obj = bpy.context.object
     obj.scale = (0.8, 0.5, 0.03)
     obj.data.materials.append(bpy.data.materials[fbmat_wood.name])
 
+    # create mesh
+    pose = Pose.create(
+        np.array([0.0, 0.0, 0.9]), Rotation.from_euler("y", 90, degrees=True)
+    )
+    fbobject = FileBasedObject.from_gs_path(
+        Path("~/.randblend/mesh/gso_dataset/GSO/tmp").expanduser(), pose=pose
+    )
+    create_obj(scene, fbobject)
+
+    # create wall
     wall = utils.create_plane(
         size=12.0,
         location=(0.0, -2.0, 0.0),
@@ -146,6 +153,7 @@ if __name__ == "__main__":
         name="Wall",
     )
 
+    # create fllor
     floor = utils.create_plane(size=12.0, name="Floor")
     floor.data.materials.append(bpy.data.materials[fbmat_carpet.name])
 

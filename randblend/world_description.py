@@ -5,6 +5,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Type, TypeVar
 
+import numpy as np
+from scipy.spatial.transform import Rotation
+
 DictableT = TypeVar("DictableT", bound="Dictable")
 
 
@@ -75,6 +78,24 @@ class Pose(Dictable):
     @classmethod
     def identity(cls) -> "Pose":
         return cls((0.0, 0.0, 0.0), (1.0, 0.0, 0.0, 0.0))
+
+    @classmethod
+    def create(
+        cls,
+        translation: Optional[np.ndarray] = None,
+        orientation: Optional[Rotation] = None,
+    ) -> "Pose":
+
+        if translation is not None:
+            trans = tuple(translation.tolist())
+        else:
+            trans = (0.0, 0.0, 0.0)
+
+        if orientation is not None:
+            ori = tuple(orientation.as_quat().tolist())
+        else:
+            ori = (1.0, 0.0, 0.0, 0.0)
+        return cls(trans, ori)
 
 
 class PhysicalObject(Dictable):
