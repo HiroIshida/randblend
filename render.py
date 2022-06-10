@@ -21,7 +21,7 @@ from randblend.path import (
     get_texture_dataset_path,
     get_texture_metainfo_path,
 )
-from randblend.spwan import create_obj
+from randblend.spawn import create_obj
 from randblend.world_description import FileBasedObject, Pose
 
 OptionalPath = Optional[Path]
