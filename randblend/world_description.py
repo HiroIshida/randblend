@@ -10,6 +10,9 @@ from scipy.spatial.transform import Rotation
 
 DictableT = TypeVar("DictableT", bound="Dictable")
 
+Float3d = Tuple[float, float, float]
+Float4d = Tuple[float, float, float, float]
+
 
 @dataclass
 class Dictable:
@@ -72,8 +75,8 @@ class Dictable:
 
 @dataclass
 class Pose(Dictable):
-    translation: Tuple[float, float, float]
-    orientation: Tuple[float, float, float, float]
+    translation: Float3d
+    orientation: Float4d
 
     @classmethod
     def identity(cls) -> "Pose":
@@ -102,23 +105,40 @@ class PhysicalObject(Dictable):
     pass
 
 
+class RawDict(Dictable):
+    data: Dict
+
+    def to_dict(self) -> Dict:
+        return self.data
+
+    @classmethod
+    def from_dict(cls: Type[DictableT], d: Dict) -> "RawDict":
+        return cls(d)
+
+
 @dataclass
 class FileBasedObject(PhysicalObject):
     name: str
     path: str
     pose: Pose
+    scale: Float3d
+    metadata: RawDict
 
     def __post_init__(self):
         path = Path(self.path)
         assert path.is_absolute()
 
     @classmethod
-    def from_gs_path(
-        cls, path: Path, pose: Optional[Pose] = None, is_visual: bool = True
+    def from_gso_path(
+        cls,
+        path: Path,
+        pose: Optional[Pose] = None,
+        scale: Optional[Float3d] = None,
+        is_visual: bool = True,
     ) -> "FileBasedObject":
 
         path = path.expanduser()
-        assert path.is_dir()
+        assert path.is_dir(), path
 
         json_path = path / "data.json"
         with json_path.open(mode="r") as f:
@@ -133,7 +153,10 @@ class FileBasedObject(PhysicalObject):
         if pose is None:
             pose = Pose.identity()
 
-        return cls(name, mesh_path, pose)
+        if scale is None:
+            scale = (1.0, 1.0, 1.0)
+
+        return cls(name, str(mesh_path), pose, scale, info)
 
 
 @dataclass

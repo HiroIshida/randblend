@@ -28,6 +28,7 @@ def create_obj(scene: bpy.types.Scene, fbobj: FileBasedObject) -> bpy.types.Obje
     objs = bpy.context.selected_objects
     obj = objs[-1]
     obj.location = fbobj.pose.translation
+    obj.scale = fbobj.scale
 
     rot = Rotation.from_quat(fbobj.pose.orientation)
     obj.rotation_euler = tuple(rot.as_euler("zyx").tolist())
