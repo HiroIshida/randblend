@@ -6,6 +6,7 @@ from typing import ClassVar, Generic, Optional, Type, TypeVar
 import pybullet
 
 from randblend.description import (
+    CubeObjectDescription,
     FileBasedObjectDescription,
     Float3d,
     Float4d,
@@ -51,3 +52,22 @@ class FileBasedBulletObject(BulletObject[FileBasedObjectDescription]):
         urdf_path = os.path.join(description.path, "object.urdf")
         object_handle = pybullet.loadURDF(urdf_path, globalScaling = description.scale)
         return object_handle
+
+
+class CubeObjectBulletObject(BulletObject[CubeObjectDescription]):
+    def _spawn_bullet_object(self) -> int:
+        description = self.description
+        half_shape = [0.5 * e for e in description.shape]
+
+        vis_id = pybullet.createCollisionShape(
+            pybullet.GEOM_BOX, halfExtents=half_shape
+        )
+        body_id = pybullet.createMultiBody(
+            baseMass=100000.0, baseCollisionShapeIndex=vis_id
+        )
+
+        pose = description.pose
+        pybullet.resetBasePositionAndOrientation(
+            body_id, pose.translation, pose.orientation
+        )
+        return body_id
