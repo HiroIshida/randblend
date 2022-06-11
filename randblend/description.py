@@ -2,13 +2,11 @@ import json
 import os
 import queue
 import sys
-import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar
 
-import numpy as np
 from scipy.spatial.transform import Rotation
 
 if "bpy" in sys.modules:
@@ -126,7 +124,7 @@ class RawDict(Dictable):
 
 
 @dataclass
-class PhysicalObject(Dictable):
+class ObjectDescription(Dictable):
     name: str
     pose: Pose
 
@@ -143,7 +141,7 @@ class PhysicalObject(Dictable):
 
 
 @dataclass
-class CubeObject(PhysicalObject):
+class CubeObjectDescription(ObjectDescription):
     shape: Float3d
 
     def _spawn_blender_object(self) -> Any:
@@ -154,7 +152,7 @@ class CubeObject(PhysicalObject):
 
 
 @dataclass
-class FileBasedObject(PhysicalObject):
+class FileBasedObjectDescription(ObjectDescription):
     scale: Float3d
     path: str
     metadata: RawDict
@@ -170,7 +168,7 @@ class FileBasedObject(PhysicalObject):
         pose: Optional[Pose] = None,
         scale: Optional[Float3d] = None,
         is_visual: bool = True,
-    ) -> "FileBasedObject":
+    ) -> "FileBasedObjectDescription":
 
         path = path.expanduser()
         assert path.is_dir(), path
@@ -199,19 +197,5 @@ class FileBasedObject(PhysicalObject):
 
 @dataclass
 class WorldDescription(Dictable):
-    dynamic_objects: Tuple[PhysicalObject]
-    static_objects: Tuple[PhysicalObject]
-
-
-if __name__ == "__main__":
-    obj_list = []
-    for i in range(10):
-        pose = Pose(translation=(0, 1, 2), orientation=(3, 2, 1, 0))
-        file_uuid = str(uuid.uuid4())[-6:]
-        obj = FileBasedObject(file_uuid, "/tmp/{}".format(file_uuid), pose)
-        obj_list.append(obj)
-    wd = WorldDescription(tuple(obj_list), tuple(obj_list))
-    wd_again = wd.from_json(wd.to_json())
-
-    embed()
-    assert wd == wd_again
+    dynamic_objects: Tuple[ObjectDescription]
+    static_objects: Tuple[ObjectDescription]

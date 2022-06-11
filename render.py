@@ -13,17 +13,20 @@ from typing import Optional, Tuple
 
 import bpy
 import mathutils
-import numpy as np
 from scipy.spatial.transform import Rotation
 
 import randblend.utils as utils
 from randblend.dataset import Dataset
+from randblend.description import (
+    CubeObjectDescription,
+    FileBasedObjectDescription,
+    Pose,
+)
 from randblend.path import (
     get_gso_dataset_path,
     get_texture_dataset_path,
     get_texture_metainfo_path,
 )
-from randblend.types import CubeObject, FileBasedObject, Pose
 
 OptionalPath = Optional[Path]
 
@@ -135,7 +138,7 @@ if __name__ == "__main__":
 
     # create table
     pose = Pose.create(translation=(0.0, 0.0, 0.8))
-    table = CubeObject("table", pose, (0.8, 0.5, 0.03))
+    table = CubeObjectDescription("table", pose, (0.8, 0.5, 0.03))
     obj = table.spawn_blender_object()
     obj.data.materials.append(bpy.data.materials[fbmat_wood.name])
 
@@ -144,7 +147,7 @@ if __name__ == "__main__":
     pose = Pose.create((0.0, 0.0, 0.9), tuple(rot.as_quat().tolist()))
     scale = (5.0, 5.0, 5.0)
     path = (get_gso_dataset_path() / "CITY_TAXI_POLICE_CAR").expanduser()
-    fbobject = FileBasedObject.from_gso_path(path, pose=pose, scale=scale)
+    fbobject = FileBasedObjectDescription.from_gso_path(path, pose=pose, scale=scale)
     obj = fbobject.spawn_blender_object()
 
     # create wall
