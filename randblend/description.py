@@ -128,27 +128,13 @@ class ObjectDescription(Dictable):
     name: str
     pose: Pose
 
-    def spawn_blender_object(self) -> Any:
-        obj = self._spawn_blender_object()
-        obj.location = self.pose.translation
-        rot = Rotation.from_quat(self.pose.orientation)
-        obj.rotation_euler = tuple(rot.as_euler("zyx").tolist())
-        return obj
 
-    @abstractmethod
-    def _spawn_blender_object(self) -> Any:
-        pass
+ObjectDescriptionT = TypeVar("ObjectDescriptionT", bound="ObjectDescription")
 
 
 @dataclass
 class CubeObjectDescription(ObjectDescription):
     shape: Float3d
-
-    def _spawn_blender_object(self) -> Any:
-        bpy.ops.mesh.primitive_cube_add(location=(0.0, 0.0, 0.8))
-        obj = bpy.context.object
-        obj.scale = self.shape
-        return obj
 
 
 @dataclass
@@ -185,14 +171,6 @@ class FileBasedObjectDescription(ObjectDescription):
             scale = (1.0, 1.0, 1.0)
 
         return cls(name, pose, scale, str(path), info)
-
-    def _spawn_blender_object(self):
-        mesh_path = os.path.join(self.path, "visual_geometry.obj")
-        bpy.ops.import_scene.obj(filepath=mesh_path)
-        objs = bpy.context.selected_objects
-        obj = objs[-1]
-        obj.scale = self.scale
-        return obj
 
 
 @dataclass

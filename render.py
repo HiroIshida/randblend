@@ -16,6 +16,7 @@ import mathutils
 from scipy.spatial.transform import Rotation
 
 import randblend.utils as utils
+from randblend.blender_object import BlenderCubeObject, BlenderFileBasedObject
 from randblend.dataset import Dataset
 from randblend.description import (
     CubeObjectDescription,
@@ -138,7 +139,8 @@ if __name__ == "__main__":
 
     # create table
     pose = Pose.create(translation=(0.0, 0.0, 0.8))
-    table = CubeObjectDescription("table", pose, (0.8, 0.5, 0.03))
+    table_description = CubeObjectDescription("table", pose, (0.8, 0.5, 0.03))
+    table = BlenderCubeObject.from_descriptoin(table_description)
     obj = table.spawn_blender_object()
     obj.data.materials.append(bpy.data.materials[fbmat_wood.name])
 
@@ -147,8 +149,11 @@ if __name__ == "__main__":
     pose = Pose.create((0.0, 0.0, 0.9), tuple(rot.as_quat().tolist()))
     scale = (5.0, 5.0, 5.0)
     path = (get_gso_dataset_path() / "CITY_TAXI_POLICE_CAR").expanduser()
-    fbobject = FileBasedObjectDescription.from_gso_path(path, pose=pose, scale=scale)
-    obj = fbobject.spawn_blender_object()
+    obj_description = FileBasedObjectDescription.from_gso_path(
+        path, pose=pose, scale=scale
+    )
+    meshobj = BlenderFileBasedObject.from_descriptoin(obj_description)
+    meshobj.spawn_blender_object()
 
     # create wall
     wall = utils.create_plane(
