@@ -12,19 +12,19 @@ if "bpy" in sys.modules:
 else:
     bpy = None
 
-DictableT = TypeVar("DictableT", bound="Dictable")
+DictableT = TypeVar("DictableT", bound="DictableMixIn")
 
 Float3d = Tuple[float, float, float]
 Float4d = Tuple[float, float, float, float]
 
 
 @dataclass
-class Dictable:
+class DictableMixIn:
     @staticmethod
-    def get_all_leaf_types() -> List[Type["Dictable"]]:
+    def get_all_leaf_types() -> List[Type["DictableMixIn"]]:
         concrete_types: List[Type] = []
         q = queue.Queue()  # type: ignore
-        q.put(Dictable)
+        q.put(DictableMixIn)
         while not q.empty():
             t: Type = q.get()
             if len(t.__subclasses__()) == 0:
@@ -40,10 +40,10 @@ class Dictable:
         d["type"] = self.__class__.__name__
 
         for key, val in d.items():
-            if isinstance(val, Dictable):
+            if isinstance(val, DictableMixIn):
                 d[key] = val.to_dict()
             if isinstance(val, tuple) or isinstance(val, list):
-                if isinstance(val[0], Dictable):
+                if isinstance(val[0], DictableMixIn):
                     d[key] = tuple([e.to_dict() for e in val])
         return d
 
@@ -81,7 +81,7 @@ class Dictable:
 
 
 @dataclass
-class Pose(Dictable):
+class Pose(DictableMixIn):
     translation: Float3d
     orientation: Float4d
 
@@ -109,7 +109,7 @@ class Pose(Dictable):
 
 
 @dataclass
-class RawDict(Dictable):
+class RawDict(DictableMixIn):
     data: Dict
 
     def to_dict(self) -> Dict:
@@ -124,7 +124,7 @@ class RawDict(Dictable):
 
 
 @dataclass
-class ObjectDescription(Dictable):
+class ObjectDescription(DictableMixIn):
     name: str
     pose: Pose
 
@@ -176,5 +176,5 @@ class FileBasedObjectDescription(ObjectDescription):
 
 
 @dataclass
-class WorldDescription(Dictable):
+class WorldDescription(DictableMixIn):
     descriptions: Tuple[ObjectDescription, ...]
