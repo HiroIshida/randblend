@@ -1,10 +1,12 @@
 import json
+import os
 import queue
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Type, TypeVar
 
+import bpy
 import numpy as np
 from scipy.spatial.transform import Rotation
 
@@ -145,18 +147,24 @@ class FileBasedObject(PhysicalObject):
             info = json.load(f)
 
         name = info["id"]
-        if is_visual:
-            mesh_path = path / "visual_geometry.obj"
-        else:
-            mesh_path = path / "collision_geometry.obj"
-
         if pose is None:
             pose = Pose.identity()
 
         if scale is None:
             scale = (1.0, 1.0, 1.0)
 
-        return cls(name, str(mesh_path), pose, scale, info)
+        return cls(name, str(path), pose, scale, info)
+
+    def spawn_blender_object(self):
+        mesh_path = os.path.join(self.path, "visual_geometry.obj")
+        bpy.ops.import_scene.obj(filepath=mesh_path)
+        objs = bpy.context.selected_objects
+        obj = objs[-1]
+        obj.location = self.pose.translation
+        obj.scale = self.scale
+
+        rot = Rotation.from_quat(self.pose.orientation)
+        obj.rotation_euler = tuple(rot.as_euler("zyx").tolist())
 
 
 @dataclass

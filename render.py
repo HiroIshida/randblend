@@ -23,8 +23,7 @@ from randblend.path import (
     get_texture_dataset_path,
     get_texture_metainfo_path,
 )
-from randblend.spawn import create_obj
-from randblend.world_description import FileBasedObject, Pose
+from randblend.types import FileBasedObject, Pose
 
 OptionalPath = Optional[Path]
 
@@ -147,7 +146,7 @@ if __name__ == "__main__":
     scale = (5.0, 5.0, 5.0)
     path = (get_gso_dataset_path() / "CITY_TAXI_POLICE_CAR").expanduser()
     fbobject = FileBasedObject.from_gso_path(path, pose=pose, scale=scale)
-    obj = create_obj(scene, fbobject)
+    obj = fbobject.spawn_blender_object()
 
     # create wall
     wall = utils.create_plane(
