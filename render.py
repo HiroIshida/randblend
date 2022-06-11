@@ -14,16 +14,13 @@ import mathutils
 from scipy.spatial.transform import Rotation
 
 import randblend.utils as utils
-from randblend.blender_object import (
-    BlenderCubeObject,
-    BlenderFileBasedObject,
-    FileBasedMaterial,
-)
+from randblend.blender_object import BlenderWorld, FileBasedMaterial
 from randblend.dataset import Dataset
 from randblend.description import (
     CubeObjectDescription,
     FileBasedObjectDescription,
     Pose,
+    WorldDescription,
 )
 from randblend.path import get_gso_dataset_path, get_texture_metainfo_path
 
@@ -64,11 +61,14 @@ if __name__ == "__main__":
     scene = bpy.data.scenes["Scene"]
     utils.clean_objects()
 
+    descriptions = []
+
     # create table
     pose = Pose.create(translation=(0.0, 0.0, 0.8))
     table_description = CubeObjectDescription("table", pose, (0.8, 0.5, 0.03))
-    table = BlenderCubeObject.from_descriptoin(table_description, texture=fbmat_wood)
-    obj = table.spawn_blender_object()
+    descriptions.append(table_description)
+    # table = BlenderCubeObject.from_descriptoin(table_description, texture=fbmat_wood)
+    # obj = table.spawn_blender_object()
 
     # create mesh
     rot = Rotation.from_euler("y", 90, degrees=True)
@@ -78,8 +78,12 @@ if __name__ == "__main__":
     obj_description = FileBasedObjectDescription.from_gso_path(
         path, pose=pose, scale=scale
     )
-    meshobj = BlenderFileBasedObject.from_descriptoin(obj_description)
-    meshobj.spawn_blender_object()
+    descriptions.append(obj_description)
+    world_description = WorldDescription(descriptions)
+    world = BlenderWorld.from_world_description(world_description)
+
+    world["table"].set_material(fbmat_wood)
+    world.spawn_all()
 
     # create wall
     wall = utils.create_plane(

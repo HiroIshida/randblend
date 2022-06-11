@@ -171,5 +171,4 @@ class FileBasedObjectDescription(ObjectDescription):
 
 @dataclass
 class WorldDescription(Dictable):
-    dynamic_objects: Tuple[ObjectDescription]
-    static_objects: Tuple[ObjectDescription]
+    descriptions: Tuple[ObjectDescription]

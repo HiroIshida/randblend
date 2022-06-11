@@ -1,8 +1,20 @@
 import os
+import queue
 from abc import abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, ClassVar, Generic, Optional, Set, Tuple, Type, TypeVar
+from typing import (
+    Any,
+    ClassVar,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    TypeVar,
+)
 
 import bpy
 from scipy.spatial.transform import Rotation
@@ -12,6 +24,7 @@ from randblend.description import (
     CubeObjectDescription,
     FileBasedObjectDescription,
     ObjectDescriptionT,
+    WorldDescription,
 )
 from randblend.path import get_ambientcg_dataset_path
 
@@ -123,9 +136,32 @@ class BlenderObject(Generic[ObjectDescriptionT]):
     def name(self) -> str:
         return self.description.name
 
+    @property
+    def is_spawned(self) -> bool:
+        return self.obj is not None
+
+    def set_material(self, material: FileBasedMaterial) -> None:
+        assert self.texture is None
+        assert not self.is_spawned
+        self.texture = material
+
+    @staticmethod
+    def get_all_leaf_types() -> List[Type["BlenderObject"]]:
+        concrete_types: List[Type] = []
+        q = queue.Queue()  # type: ignore
+        q.put(BlenderObject)
+        while not q.empty():
+            t: Type = q.get()
+            if len(t.__subclasses__()) == 0:
+                concrete_types.append(t)
+
+            for st in t.__subclasses__():
+                q.put(st)
+        return list(set(concrete_types))
+
 
 class BlenderFileBasedObject(BlenderObject[FileBasedObjectDescription]):
-    description_tpe = FileBasedObjectDescription
+    description_type = FileBasedObjectDescription
 
     def _spawn_blender_object(self):
         description = self.description
@@ -146,3 +182,21 @@ class BlenderCubeObject(BlenderObject[CubeObjectDescription]):
         obj = bpy.context.object
         obj.scale = description.shape
         return obj
+
+
+class BlenderWorld(Dict[str, BlenderObject]):
+    @classmethod
+    def from_world_description(cls, wd: WorldDescription) -> "BlenderWorld":
+        leaf_types = BlenderObject.get_all_leaf_types()
+        table = {t.description_type: t for t in leaf_types}
+
+        d = {}
+        for description in wd.descriptions:
+            target_type: Type[BlenderObject] = table[type(description)]
+            blender_object = target_type.from_descriptoin(description)
+            d[blender_object.name] = blender_object
+        return cls(d)
+
+    def spawn_all(self):
+        for obj in self.values():
+            obj.spawn_blender_object()
