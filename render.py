@@ -23,7 +23,7 @@ from randblend.path import (
     get_texture_dataset_path,
     get_texture_metainfo_path,
 )
-from randblend.types import FileBasedObject, Pose, CubeObject
+from randblend.types import CubeObject, FileBasedObject, Pose
 
 OptionalPath = Optional[Path]
 
