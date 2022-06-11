@@ -154,11 +154,7 @@ class FileBasedObjectDescription(ObjectDescription):
 
     @classmethod
     def from_gso_path(
-        cls,
-        path: Path,
-        pose: Optional[Pose] = None,
-        scale: float = 1.0,
-        is_visual: bool = True,
+        cls, path: Path, pose: Optional[Pose] = None, scale: float = 1.0
     ) -> "FileBasedObjectDescription":
 
         path = path.expanduser()
