@@ -1,5 +1,5 @@
 import math
-from typing import Optional, Tuple
+from typing import Tuple
 
 import bpy
 

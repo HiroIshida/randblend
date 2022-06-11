@@ -7,9 +7,7 @@ sys.path.extend(["/home/h-ishida/.pyenv/versions/3.10.2/lib/python3.10/site-pack
 
 import math
 import random
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Optional, Tuple
+from typing import Tuple
 
 import bpy
 import mathutils
@@ -27,11 +25,7 @@ from randblend.description import (
     FileBasedObjectDescription,
     Pose,
 )
-from randblend.path import (
-    get_ambientcg_dataset_path,
-    get_gso_dataset_path,
-    get_texture_metainfo_path,
-)
+from randblend.path import get_gso_dataset_path, get_texture_metainfo_path
 
 
 def look_at(obj_camera, point: mathutils.Vector):

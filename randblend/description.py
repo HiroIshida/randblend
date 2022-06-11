@@ -1,13 +1,9 @@
 import json
-import os
 import queue
 import sys
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar
-
-from scipy.spatial.transform import Rotation
+from typing import Dict, List, Optional, Tuple, Type, TypeVar
 
 if "bpy" in sys.modules:
     import bpy

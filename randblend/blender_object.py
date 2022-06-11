@@ -1,5 +1,5 @@
 import os
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, ClassVar, Generic, Optional, Set, Tuple, Type, TypeVar
@@ -11,7 +11,6 @@ import randblend.utils as utils
 from randblend.description import (
     CubeObjectDescription,
     FileBasedObjectDescription,
-    ObjectDescription,
     ObjectDescriptionT,
 )
 from randblend.path import get_ambientcg_dataset_path
