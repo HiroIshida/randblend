@@ -113,7 +113,7 @@ class BlenderObject(Generic[ObjectDescriptionT]):
         obj.rotation_euler = tuple(rot.as_euler("zyx").tolist())
         if self.texture is not None:
             obj.data.materials.append(bpy.data.materials[self.texture.name])
-        return obj
+        self.obj = obj
 
     @abstractmethod
     def _spawn_blender_object(self) -> Any:

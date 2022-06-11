@@ -69,7 +69,6 @@ if __name__ == "__main__":
     table_description = CubeObjectDescription("table", pose, (0.8, 0.5, 0.03))
     table = BlenderCubeObject.from_descriptoin(table_description, texture=fbmat_wood)
     obj = table.spawn_blender_object()
-    obj.data.materials.append(bpy.data.materials[fbmat_wood.name])
 
     # create mesh
     rot = Rotation.from_euler("y", 90, degrees=True)
