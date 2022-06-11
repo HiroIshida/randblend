@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import json
 import os
 import queue
@@ -5,7 +6,7 @@ import sys
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Type, TypeVar
+from typing import Dict, List, Optional, Tuple, Type, TypeVar, Any
 
 import numpy as np
 from scipy.spatial.transform import Rotation
@@ -129,6 +130,22 @@ class PhysicalObject(Dictable):
     name: str
     pose: Pose
 
+    def spawn_blender_object(self) -> Any:
+        obj = self._spawn_blender_object()
+        obj.location = self.pose.translation
+        rot = Rotation.from_quat(self.pose.orientation)
+        obj.rotation_euler = tuple(rot.as_euler("zyx").tolist())
+        return obj
+
+    @abstractmethod
+    def _spawn_blender_object(self) -> Any:
+        pass
+
+
+@dataclass
+class CubeObject(PhysicalObject):
+    shape: Float3d
+
 
 @dataclass
 class FileBasedObject(PhysicalObject):
@@ -165,16 +182,13 @@ class FileBasedObject(PhysicalObject):
 
         return cls(name, pose, scale, str(path), info)
 
-    def spawn_blender_object(self):
+    def _spawn_blender_object(self):
         mesh_path = os.path.join(self.path, "visual_geometry.obj")
         bpy.ops.import_scene.obj(filepath=mesh_path)
         objs = bpy.context.selected_objects
         obj = objs[-1]
-        obj.location = self.pose.translation
         obj.scale = self.scale
-
-        rot = Rotation.from_quat(self.pose.orientation)
-        obj.rotation_euler = tuple(rot.as_euler("zyx").tolist())
+        return obj
 
 
 @dataclass
