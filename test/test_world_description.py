@@ -12,7 +12,7 @@ def test_pose_coding():
 def test_filebased_object():
     pose = Pose(translation=(0, 1, 2), orientation=(3, 2, 1, 0))
     meta = {"hoge": "hogehoge"}
-    obj = FileBasedObject("obj", "/tmp/hogehoge", pose, (1, 2, 3), meta)
+    obj = FileBasedObject("obj", pose, (1, 2, 3), "/tmp/hogehoge", meta)
     obj_again = obj.from_json(obj.to_json())
     assert obj == obj_again
 
@@ -24,7 +24,7 @@ def test_world_description():
         file_uuid = str(uuid.uuid4())[-6:]
         meta = {"hoge": "hogehoge"}
         obj = FileBasedObject(
-            file_uuid, "/tmp/{}".format(file_uuid), pose, (1, 2, 3), meta
+            file_uuid, pose, (1, 2, 3), "/tmp/{}".format(file_uuid), meta
         )
         obj_list.append(obj)
     wd = WorldDescription(tuple(obj_list), tuple(obj_list))

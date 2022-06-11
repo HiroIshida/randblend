@@ -112,10 +112,7 @@ class Pose(Dictable):
         return cls(trans, ori)
 
 
-class PhysicalObject(Dictable):
-    pass
-
-
+@dataclass
 class RawDict(Dictable):
     data: Dict
 
@@ -128,11 +125,15 @@ class RawDict(Dictable):
 
 
 @dataclass
-class FileBasedObject(PhysicalObject):
+class PhysicalObject(Dictable):
     name: str
-    path: str
     pose: Pose
+
+
+@dataclass
+class FileBasedObject(PhysicalObject):
     scale: Float3d
+    path: str
     metadata: RawDict
 
     def __post_init__(self):
@@ -162,7 +163,7 @@ class FileBasedObject(PhysicalObject):
         if scale is None:
             scale = (1.0, 1.0, 1.0)
 
-        return cls(name, str(path), pose, scale, info)
+        return cls(name, pose, scale, str(path), info)
 
     def spawn_blender_object(self):
         mesh_path = os.path.join(self.path, "visual_geometry.obj")
