@@ -18,6 +18,6 @@ def get_texture_metainfo_path():
     return path
 
 
-def get_mesh_dataset_path():
-    path = get_texture_dataset_path() / "mesh" / "gso_dataset" / "GSO"
+def get_gso_dataset_path():
+    path = get_root_path() / "gso_dataset"
     return path

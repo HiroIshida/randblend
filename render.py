@@ -18,7 +18,11 @@ from scipy.spatial.transform import Rotation
 
 import randblend.utils as utils
 from randblend.dataset import Dataset
-from randblend.path import get_texture_dataset_path, get_texture_metainfo_path
+from randblend.path import (
+    get_gso_dataset_path,
+    get_texture_dataset_path,
+    get_texture_metainfo_path,
+)
 from randblend.spawn import create_obj
 from randblend.world_description import FileBasedObject, Pose
 
@@ -140,10 +144,10 @@ if __name__ == "__main__":
     pose = Pose.create(
         np.array([0.0, 0.0, 0.9]), Rotation.from_euler("y", 90, degrees=True)
     )
-    fbobject = FileBasedObject.from_gs_path(
-        Path("~/.randblend/mesh/gso_dataset/GSO/tmp").expanduser(), pose=pose
-    )
-    create_obj(scene, fbobject)
+    scale = (5.0, 5.0, 5.0)
+    path = (get_gso_dataset_path() / "CITY_TAXI_POLICE_CAR").expanduser()
+    fbobject = FileBasedObject.from_gso_path(path, pose=pose, scale=scale)
+    obj = create_obj(scene, fbobject)
 
     # create wall
     wall = utils.create_plane(
