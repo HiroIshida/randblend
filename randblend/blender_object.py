@@ -169,7 +169,8 @@ class BlenderFileBasedObject(BlenderObject[FileBasedObjectDescription]):
         bpy.ops.import_scene.obj(filepath=mesh_path)
         objs = bpy.context.selected_objects
         obj = objs[-1]
-        obj.scale = description.scale
+        scale = description.scale
+        obj.scale = (scale, scale, scale)
         return obj
 
 

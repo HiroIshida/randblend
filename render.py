@@ -73,10 +73,9 @@ if __name__ == "__main__":
     # create mesh
     rot = Rotation.from_euler("y", 90, degrees=True)
     pose = Pose.create((0.0, 0.0, 0.9), tuple(rot.as_quat().tolist()))
-    scale = (5.0, 5.0, 5.0)
     path = (get_gso_dataset_path() / "CITY_TAXI_POLICE_CAR").expanduser()
     obj_description = FileBasedObjectDescription.from_gso_path(
-        path, pose=pose, scale=scale
+        path, pose=pose, scale=5.0
     )
     descriptions.append(obj_description)
     world_description = WorldDescription(descriptions)

@@ -18,7 +18,7 @@ def test_pose_coding():
 def test_filebased_object():
     pose = Pose(translation=(0, 1, 2), orientation=(1.0, 0.0, 0.0, 0.0))
     meta = RawDict({"hoge": "hogehoge"})
-    obj = FileBasedObjectDescription("obj", pose, (1, 2, 3), "/tmp/hogehoge", meta)
+    obj = FileBasedObjectDescription("obj", pose, 2.0, "/tmp/hogehoge", meta)
     obj_again = obj.from_json(obj.to_json())
     assert obj == obj_again
 
@@ -41,7 +41,7 @@ def test_world_description():
         file_uuid = str(uuid.uuid4())[-6:]
         meta = RawDict({"hoge": "hogehoge"})
         obj = FileBasedObjectDescription(
-            file_uuid, pose, (1, 2, 3), "/tmp/{}".format(file_uuid), meta
+            file_uuid, pose, 2.0, "/tmp/{}".format(file_uuid), meta
         )
         static_obj_list.append(obj)
     wd = WorldDescription(tuple(static_obj_list))
