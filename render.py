@@ -23,7 +23,7 @@ from randblend.path import (
     get_texture_dataset_path,
     get_texture_metainfo_path,
 )
-from randblend.types import FileBasedObject, Pose
+from randblend.types import FileBasedObject, Pose, CubeObject
 
 OptionalPath = Optional[Path]
 
@@ -134,15 +134,14 @@ if __name__ == "__main__":
     utils.clean_objects()
 
     # create table
-    bpy.ops.mesh.primitive_cube_add(location=(0.0, 0.0, 0.8))
-    obj = bpy.context.object
-    obj.scale = (0.8, 0.5, 0.03)
+    pose = Pose.create(translation=(0.0, 0.0, 0.8))
+    table = CubeObject("table", pose, (0.8, 0.5, 0.03))
+    obj = table.spawn_blender_object()
     obj.data.materials.append(bpy.data.materials[fbmat_wood.name])
 
     # create mesh
-    pose = Pose.create(
-        np.array([0.0, 0.0, 0.9]), Rotation.from_euler("y", 90, degrees=True)
-    )
+    rot = Rotation.from_euler("y", 90, degrees=True)
+    pose = Pose.create((0.0, 0.0, 0.9), tuple(rot.as_quat().tolist()))
     scale = (5.0, 5.0, 5.0)
     path = (get_gso_dataset_path() / "CITY_TAXI_POLICE_CAR").expanduser()
     fbobject = FileBasedObject.from_gso_path(path, pose=pose, scale=scale)

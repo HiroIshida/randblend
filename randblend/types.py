@@ -97,20 +97,20 @@ class Pose(Dictable):
     @classmethod
     def create(
         cls,
-        translation: Optional[np.ndarray] = None,
-        orientation: Optional[Rotation] = None,
+        translation: Optional[Float3d] = None,
+        orientation: Optional[Float4d] = None,
     ) -> "Pose":
 
-        if translation is not None:
-            trans = tuple(translation.tolist())
-        else:
-            trans = (0.0, 0.0, 0.0)
+        if translation is None:
+            translation = (0.0, 0.0, 0.0)
 
-        if orientation is not None:
-            ori = tuple(orientation.as_quat().tolist())
-        else:
-            ori = (1.0, 0.0, 0.0, 0.0)
-        return cls(trans, ori)
+        if orientation is None:
+            orientation = (1.0, 0.0, 0.0, 0.0)
+
+        assert isinstance(translation, tuple)
+        assert isinstance(orientation, tuple)
+
+        return cls(translation, orientation)
 
 
 @dataclass
@@ -145,6 +145,12 @@ class PhysicalObject(Dictable):
 @dataclass
 class CubeObject(PhysicalObject):
     shape: Float3d
+
+    def _spawn_blender_object(self) -> Any:
+        bpy.ops.mesh.primitive_cube_add(location=(0.0, 0.0, 0.8))
+        obj = bpy.context.object
+        obj.scale = self.shape
+        return obj
 
 
 @dataclass
@@ -206,7 +212,6 @@ if __name__ == "__main__":
         obj_list.append(obj)
     wd = WorldDescription(tuple(obj_list), tuple(obj_list))
     wd_again = wd.from_json(wd.to_json())
-    from IPython import embed
 
     embed()
     assert wd == wd_again
