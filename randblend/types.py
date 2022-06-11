@@ -1,14 +1,19 @@
 import json
 import os
 import queue
+import sys
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Type, TypeVar
 
-import bpy
 import numpy as np
 from scipy.spatial.transform import Rotation
+
+if "bpy" in sys.modules:
+    import bpy
+else:
+    bpy = None
 
 DictableT = TypeVar("DictableT", bound="Dictable")
 
@@ -53,8 +58,12 @@ class Dictable:
         for key, val in d.items():
 
             if isinstance(val, dict):
-                t = type_table[val["type"]]
-                d[key] = t.from_dict(val)
+                is_rawdict = "type" not in val
+                if is_rawdict:
+                    d[key] = val
+                else:
+                    t = type_table[val["type"]]
+                    d[key] = t.from_dict(val)
 
             if isinstance(val, list) or isinstance(val, tuple):
 
