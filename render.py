@@ -16,7 +16,11 @@ import mathutils
 from scipy.spatial.transform import Rotation
 
 import randblend.utils as utils
-from randblend.blender_object import BlenderCubeObject, BlenderFileBasedObject
+from randblend.blender_object import (
+    BlenderCubeObject,
+    BlenderFileBasedObject,
+    FileBasedMaterial,
+)
 from randblend.dataset import Dataset
 from randblend.description import (
     CubeObjectDescription,
@@ -24,80 +28,10 @@ from randblend.description import (
     Pose,
 )
 from randblend.path import (
+    get_ambientcg_dataset_path,
     get_gso_dataset_path,
-    get_texture_dataset_path,
     get_texture_metainfo_path,
 )
-
-OptionalPath = Optional[Path]
-
-
-@dataclass
-class FileBasedMaterial:
-    name: str
-    color: OptionalPath = None
-    metalness: OptionalPath = None
-    roughness: OptionalPath = None
-    normalgl: OptionalPath = None
-    displacement: OptionalPath = None
-    ambientocclusion: OptionalPath = None
-
-    @classmethod
-    def from_ambientcg_id(cls, texture_id: str) -> "FileBasedMaterial":
-        dataset_path = get_texture_dataset_path()
-        resolution = "_2K"  # TODO(load from yaml??"
-        path = dataset_path / (texture_id + resolution)
-        assert path.is_dir()
-        return cls.from_ambientcg_path(path)
-
-    @classmethod
-    def from_ambientcg_path(cls, base_dir_path: Path) -> "FileBasedMaterial":
-        base_dir_path = base_dir_path.expanduser()
-        data_id = base_dir_path.name
-        extension = "jpg"  # TODO(HiroIshida) png
-
-        postfix_list = [
-            "Color",
-            "Metalness",
-            "Roughness",
-            "NormalGL",
-            "Displacement",
-            "AmbientOcclusion",
-        ]
-
-        kwargs = {}
-        for postfix in postfix_list:
-            path = base_dir_path / "{}_{}.{}".format(data_id, postfix, extension)
-            if not path.exists():
-                path = None
-            kwargs[postfix.lower()] = path
-
-        return cls(name=data_id, **kwargs)
-
-
-def add_named_material(
-    fbmat: FileBasedMaterial, scale=(1.0, 1.0, 1.0), displacement_scale: float = 1.0
-) -> bpy.types.Material:
-    mat = utils.add_material(fbmat.name, use_nodes=True, make_node_tree_empty=True)
-
-    def convert(path: OptionalPath) -> str:
-        if isinstance(path, Path):
-            return str(path)
-        else:
-            return ""
-
-    utils.build_pbr_textured_nodes(
-        mat.node_tree,
-        color_texture_path=convert(fbmat.color),
-        roughness_texture_path=convert(fbmat.roughness),
-        normal_texture_path=convert(fbmat.normalgl),
-        metallic_texture_path=convert(fbmat.displacement),
-        displacement_texture_path=convert(fbmat.displacement),
-        ambient_occlusion_texture_path=convert(fbmat.ambientocclusion),
-        scale=scale,
-        displacement_scale=displacement_scale,
-    )
-    return mat
 
 
 def look_at(obj_camera, point: mathutils.Vector):
@@ -128,10 +62,9 @@ if __name__ == "__main__":
 
     # prepare material
     fbmat_wood = FileBasedMaterial.from_ambientcg_id(material_table)
-    add_named_material(fbmat_wood, scale=(1, 1, 1))
-
-    fbmat_carpet = FileBasedMaterial.from_ambientcg_id(material_floor)
-    add_named_material(fbmat_carpet, scale=(0.1, 0.1, 0.1))
+    fbmat_carpet = FileBasedMaterial.from_ambientcg_id(
+        material_floor, scale=(0.1, 0.1, 0.1)
+    )
 
     # Render Setting
     scene = bpy.data.scenes["Scene"]
@@ -140,7 +73,7 @@ if __name__ == "__main__":
     # create table
     pose = Pose.create(translation=(0.0, 0.0, 0.8))
     table_description = CubeObjectDescription("table", pose, (0.8, 0.5, 0.03))
-    table = BlenderCubeObject.from_descriptoin(table_description)
+    table = BlenderCubeObject.from_descriptoin(table_description, texture=fbmat_wood)
     obj = table.spawn_blender_object()
     obj.data.materials.append(bpy.data.materials[fbmat_wood.name])
 

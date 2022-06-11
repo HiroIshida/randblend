@@ -7,14 +7,14 @@ def get_root_path() -> Path:
     return path
 
 
-def get_texture_dataset_path():
+def get_ambientcg_dataset_path():
     path = get_root_path() / "texture_dataset"
     path.mkdir(exist_ok=True)
     return path
 
 
 def get_texture_metainfo_path():
-    path = get_texture_dataset_path() / "metainfo.yaml"
+    path = get_ambientcg_dataset_path() / "metainfo.yaml"
     return path
 
 
