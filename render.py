@@ -80,6 +80,10 @@ if __name__ == "__main__":
     )
     descriptions.append(obj_description)
     world_description = WorldDescription(descriptions)
+
+    with open("hoge.json", "w") as f:
+        f.write(world_description.to_json())
+
     world = BlenderWorld.from_world_description(world_description)
 
     world["table"].set_material(fbmat_wood)

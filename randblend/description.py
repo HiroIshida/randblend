@@ -1,9 +1,11 @@
+import copy
 import json
 import queue
 import sys
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Type, TypeVar
+
+from pydantic.dataclasses import dataclass
 
 if "bpy" in sys.modules:
     import bpy
@@ -53,20 +55,19 @@ class Dictable:
         for key, val in d.items():
 
             if isinstance(val, dict):
-                is_rawdict = "type" not in val
-                if is_rawdict:
-                    d[key] = val
-                else:
-                    t = type_table[val["type"]]
-                    d[key] = t.from_dict(val)
+                t = type_table[val["type"]]
+                d[key] = t.from_dict(val)
 
             if isinstance(val, list) or isinstance(val, tuple):
 
-                if isinstance(val[0], dict):
-                    t = type_table[val[0]["type"]]
-                    d[key] = tuple([t.from_dict(e) for e in val])
-                else:
-                    d[key] = tuple(val)
+                def convert(e):
+                    if isinstance(e, dict):
+                        t = type_table[e["type"]]
+                        return t.from_dict(e)
+                    else:
+                        return e
+
+                d[key] = tuple([convert(e) for e in val])
 
         d.pop("type", None)
         return cls(**d)  # type: ignore
@@ -112,10 +113,13 @@ class RawDict(Dictable):
     data: Dict
 
     def to_dict(self) -> Dict:
-        return self.data
+        d = copy.deepcopy(self.data)
+        d["type"] = self.__class__.__name__
+        return d
 
     @classmethod
     def from_dict(cls: Type[DictableT], d: Dict) -> "RawDict":
+        d.pop("type", None)
         return cls(d)
 
 
@@ -131,6 +135,11 @@ ObjectDescriptionT = TypeVar("ObjectDescriptionT", bound="ObjectDescription")
 @dataclass
 class CubeObjectDescription(ObjectDescription):
     shape: Float3d
+
+    @classmethod
+    def from_dict(cls: Type[DictableT], d: Dict) -> DictableT:
+        print(d)
+        return super().from_dict(d)
 
 
 @dataclass
@@ -166,9 +175,9 @@ class FileBasedObjectDescription(ObjectDescription):
         if scale is None:
             scale = (1.0, 1.0, 1.0)
 
-        return cls(name, pose, scale, str(path), info)
+        return cls(name, pose, scale, str(path), RawDict(info))
 
 
 @dataclass
 class WorldDescription(Dictable):
-    descriptions: Tuple[ObjectDescription]
+    descriptions: Tuple[ObjectDescription, ...]

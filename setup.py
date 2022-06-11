@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup_requires = []
 
-install_requires = []
+install_requires = ["pydantic"]
 
 setup(
     name="randblend",
