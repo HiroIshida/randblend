@@ -34,6 +34,7 @@ OptionalPath = Optional[Path]
 
 
 _registered_materials: Set[str] = set()
+_registered_object_count_holder: List = [0]
 
 
 @dataclass
@@ -127,6 +128,10 @@ class BlenderObject(Generic[ObjectDescriptionT]):
         if self.texture is not None:
             obj.data.materials.append(bpy.data.materials[self.texture.name])
         self.obj = obj
+
+        id_offset = 1024  # some random value
+        _registered_object_count_holder[0] += 1
+        self.obj["inst_id"] = id_offset + _registered_object_count_holder[0]
 
     @abstractmethod
     def _spawn_blender_object(self) -> Any:

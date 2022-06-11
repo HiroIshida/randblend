@@ -10,8 +10,11 @@ import random
 from typing import Tuple
 
 import bpy
+import bpycv
 import mathutils
 from scipy.spatial.transform import Rotation
+import cv2
+import numpy as np
 
 import randblend.utils as utils
 from randblend.blender_object import BlenderWorld, FileBasedMaterial
@@ -46,20 +49,18 @@ if __name__ == "__main__":
     material_table = random.choice(materials_table_cand)
     material_floor = random.choice(materials_floor_cand)
 
-    # Args
-    output_file_path = bpy.path.relpath("./out-")
-    resolution_percentage = 30
-    num_samples = 16
+    bpycv.clear_all()
+    bpy.context.scene.frame_set(1)
+    bpy.context.scene.render.engine = "CYCLES"
+    bpy.context.scene.cycles.samples = 8
+    #bpy.context.scene.render.resolution_y = 512
+    #bpy.context.scene.render.resolution_x = 512
 
     # prepare material
     fbmat_wood = FileBasedMaterial.from_ambientcg_id(material_table)
     fbmat_carpet = FileBasedMaterial.from_ambientcg_id(
         material_floor, scale=(0.1, 0.1, 0.1)
     )
-
-    # Render Setting
-    scene = bpy.data.scenes["Scene"]
-    utils.clean_objects()
 
     descriptions = []
 
@@ -100,13 +101,27 @@ if __name__ == "__main__":
     floor = utils.create_plane(size=12.0, name="Floor")
     floor.data.materials.append(bpy.data.materials[fbmat_carpet.name])
 
-    camera_object = utils.create_camera(location=(0.0, -0.6, 3.0))
-    look_at(camera_object, (0, 0.3, 0))
+    camera = bpy.context.scene.camera
+    camera.location = (-0., -0.2, 3.)
+    camera.rotation_euler = (0.0, 0.0, 0.0)
+    camera.data.lens = 60
+    camera.data.sensor_width = 70.0
+    camera.data.sensor_height = 40.0
+    result = bpycv.render_data()
 
-    # utils.add_track_to_constraint(camera_object, obj)
 
-    # utils.set_camera_params(camera_object.data, obj, lens=50.0)
-    utils.create_area_light(rotation=(0.0, math.pi * 0.1, -math.pi * 0.1), strength=100)
+    # save result
+    cv2.imwrite(
+        "demo-rgb.jpg", result["image"][..., ::-1]
+    )  # transfer RGB image to opencv's BGR
 
-    utils.set_output_properties(scene, resolution_percentage, output_file_path)
-    utils.set_cycles_renderer(scene, camera_object, num_samples)
+    # save instance map as 16 bit png
+    # the value of each pixel represents the inst_id of the object to which the pixel belongs
+    cv2.imwrite("demo-inst.png", np.uint16(result["inst"]))
+
+    # convert depth units from meters to millimeters
+    depth_in_mm = result["depth"] * 1000
+    cv2.imwrite("demo-depth.png", np.uint16(depth_in_mm))  # save as 16bit png
+
+    # visualization inst_rgb_depth for human
+    cv2.imwrite("demo-vis-inst_rgb_depth-.png", result.vis()[..., ::-1])
