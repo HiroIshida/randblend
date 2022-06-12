@@ -15,7 +15,7 @@ from randblend.pybullet_object import (
 
 # mesh object
 path = (get_gso_dataset_path() / "CITY_TAXI_POLICE_CAR").expanduser()
-pose = Pose.create(translation=(0.0, 0.0, 0.9))
+pose = Pose.create(translation=(0.0, 0.0, 1.9))
 desc = FileBasedObjectDescription.from_gso_path(path, scale=1, pose=pose)
 obj = FileBasedBulletObject.from_descriptoin(desc)
 
@@ -38,11 +38,18 @@ pybullet.setGravity(0, 0, -10)
 obj.spawn_bullet_object()
 table.spawn_bullet_object()
 floor.spawn_bullet_object()
+pybullet.saveWorld("hoge.txt")
+
+import time
+
+for i in range(1000):
+    if i % 5 == 1:
+        time.sleep(0.1)
+    pybullet.stepSimulation()
 
 json_str = serialize_to_json()
 with open("/tmp/randblend.json", "w") as f:
     f.write(json_str)
 
-import time
 
 time.sleep(100)

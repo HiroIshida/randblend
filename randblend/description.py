@@ -1,5 +1,6 @@
 import copy
 import json
+import math
 import queue
 import sys
 from pathlib import Path
@@ -109,6 +110,34 @@ class Pose(DictableMixIn):
 
 
 @dataclass
+class Inertia:
+    ixx: float
+    ixy: float
+    ixz: float
+    iyy: float
+    iyz: float
+    izz: float
+
+    def get_diagonal(self) -> Float3d:
+        return (self.ixx, self.iyy, self.izz)
+
+    @classmethod
+    def from_mass(cls, mass: float) -> "Inertia":
+        # sphere tensor
+        wood_density_g_cm = 0.4  # e.g. hinoki
+        wood_density_g_m = wood_density_g_cm * 100 ** 3
+        wood_density_kg_m = wood_density_g_m * 0.001
+        r = (3 * mass / (4 * math.pi * wood_density_kg_m)) ** (1 / 3.0)
+
+        iner = 2.0 / 5.0 * mass * r ** 2
+        return cls(iner, 0.0, 0.0, iner, 0.0, iner)
+
+    @classmethod
+    def zeros(cls) -> "Inertia":
+        return cls(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+
+@dataclass
 class RawDict(DictableMixIn):
     data: Dict
 
@@ -135,12 +164,16 @@ ObjectDescriptionT = TypeVar("ObjectDescriptionT", bound="ObjectDescription")
 @dataclass
 class CubeObjectDescription(ObjectDescription):
     shape: Float3d
+    mass: float = 0.0
+    inertia: Inertia = Inertia.zeros()
 
     @classmethod
     def create_floor(cls) -> "CubeObjectDescription":
         name = "floor"
         pose = Pose.create(translation=(0.0, 0.0, -0.05))
-        return cls(name, pose, (100.0, 100.0, 0.1))
+        mass = 0.0
+        inertia = Inertia.zeros()
+        return cls(name, pose, (100.0, 100.0, 0.1), mass, inertia)
 
 
 @dataclass

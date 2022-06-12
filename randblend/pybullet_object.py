@@ -17,12 +17,6 @@ from randblend.description import (
 BulletObjectT = TypeVar("BulletObjectT", bound="BulletObject")
 
 
-#    def serialize(self) -> str:
-#        descriptions = tuple([obj.description for obj in self.spawned_objects])
-#        wd = WorldDescription(descriptions=descriptions)
-#        return wd.to_json()
-
-
 _spawned_objects: Dict[str, "BulletObject"] = {}  # set when bullet object is spawned
 
 
@@ -90,5 +84,9 @@ class CubeObjectBulletObject(BulletObject[CubeObjectDescription]):
         pose = description.pose
         pybullet.resetBasePositionAndOrientation(
             body_id, pose.translation, pose.orientation
+        )
+        pybullet.changeDynamics(body_id, -1, mass=description.mass)
+        pybullet.changeDynamics(
+            body_id, -1, localInertiaDiagonal=description.inertia.get_diagonal()
         )
         return body_id
