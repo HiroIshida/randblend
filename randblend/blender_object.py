@@ -188,7 +188,8 @@ class BlenderCubeObject(BlenderObject[CubeObjectDescription]):
         description = self.description
         bpy.ops.mesh.primitive_cube_add()
         obj = bpy.context.object
-        obj.scale = description.shape
+        half_extents = tuple([0.5 * e for e in description.shape])
+        obj.scale = half_extents
         return obj
 
 
