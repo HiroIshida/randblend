@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Type, TypeVar
 
+import numpy as np
 from pydantic.dataclasses import dataclass
 
 from randblend.path import get_gso_dataset_path
@@ -176,6 +177,20 @@ class CubeObjectDescription(ObjectDescription):
         mass = 0.0
         inertia = Inertia.zeros()
         return cls(name, pose, (100.0, 100.0, 0.1), mass, inertia)
+
+    def sample_position_on_top(self) -> Float3d:
+        assert self.pose.orientation == (0.0, 0.0, 0.0, 1.0), "under construction"
+
+        center = np.array(self.pose.translation)
+        extent = np.array(self.shape)
+
+        xyz_min = center - 0.5 * extent
+        xy_min = xyz_min[:2]
+        xy_random = xy_min + np.random.rand(2) * extent[:2]
+
+        z_top = center[2] + extent[2]
+        ret = tuple(xy_random.tolist() + [z_top])
+        return ret
 
 
 @dataclass
