@@ -5,14 +5,12 @@ working_dir_path = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(working_dir_path)
 sys.path.extend(["/home/h-ishida/.pyenv/versions/3.10.2/lib/python3.10/site-packages"])
 
-import math
 
 import bpy
 import bpycv
 import cv2
 import numpy as np
 
-import randblend.utils as utils
 from randblend.blender_object import BlenderWorld
 
 if __name__ == "__main__":
@@ -22,18 +20,6 @@ if __name__ == "__main__":
     bpy.context.scene.cycles.samples = 8
     bw = BlenderWorld.from_json_file("/tmp/randblend.json")
     bw.spawn_all()
-
-    # create wall
-    wall = utils.create_plane(
-        size=12.0,
-        location=(0.0, -2.0, 0.0),
-        rotation=(math.pi * 90.0 / 180.0, 0.0, 0.0),
-        name="Wall",
-    )
-
-    # create fllor
-    floor = utils.create_plane(size=12.0, name="Floor")
-    # floor.data.materials.append(bpy.data.materials[fbmat_carpet.name])
 
     camera = bpy.context.scene.camera
     camera.location = (-0.0, -0.2, 3.0)

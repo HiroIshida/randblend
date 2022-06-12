@@ -137,9 +137,10 @@ class CubeObjectDescription(ObjectDescription):
     shape: Float3d
 
     @classmethod
-    def from_dict(cls: Type[DictableT], d: Dict) -> DictableT:
-        print(d)
-        return super().from_dict(d)
+    def create_floor(cls) -> "CubeObjectDescription":
+        name = "floor"
+        pose = Pose.create(translation=(0.0, 0.0, -0.05))
+        return cls(name, pose, (100.0, 100.0, 0.1))
 
 
 @dataclass

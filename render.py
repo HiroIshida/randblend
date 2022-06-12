@@ -5,7 +5,6 @@ working_dir_path = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(working_dir_path)
 sys.path.extend(["/home/h-ishida/.pyenv/versions/3.10.2/lib/python3.10/site-packages"])
 
-import math
 import random
 from typing import Tuple
 
@@ -87,12 +86,12 @@ if __name__ == "__main__":
     world.spawn_all()
 
     # create wall
-    wall = utils.create_plane(
-        size=12.0,
-        location=(0.0, -2.0, 0.0),
-        rotation=(math.pi * 90.0 / 180.0, 0.0, 0.0),
-        name="Wall",
-    )
+    # wall = utils.create_plane(
+    #    size=12.0,
+    #    location=(0.0, -2.0, 0.0),
+    #    rotation=(math.pi * 90.0 / 180.0, 0.0, 0.0),
+    #    name="Wall",
+    # )
 
     # create fllor
     floor = utils.create_plane(size=12.0, name="Floor")
