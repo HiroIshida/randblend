@@ -41,7 +41,7 @@ if __name__ == "__main__":
         material_floor, scale=(0.01, 0.01, 0.01)
     )
 
-    bw = BlenderWorld.from_json_file("/tmp/randblend.json")
+    bw = BlenderWorld.from_pickle_file("/tmp/randblend.json")
     bw["table"].set_material(fbmat_wood)
     bw["floor"].set_material(fbmat_carpet)
     bw.spawn_all()

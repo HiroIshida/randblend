@@ -28,8 +28,9 @@ def spawn_registered_objects():
 _spawned_objects: Dict[str, "BulletObject"] = {}  # set when bullet object is spawned
 
 
-def serialize_spawned_object_to_pickle() -> str:
-    return pickle.dumps(_spawned_objects)
+def serialize_spawned_object_to_pickle() -> bytes:
+    descriptions = [val.description for val in _spawned_objects.values()]
+    return pickle.dumps(descriptions)
 
 
 def update_spawned_object_descriptions() -> None:

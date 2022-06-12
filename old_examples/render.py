@@ -80,7 +80,7 @@ if __name__ == "__main__":
     descriptions.append(obj_description)
     world_description = WorldDescription(descriptions)
 
-    world = BlenderWorld.from_world_description(world_description)
+    world = BlenderWorld.from_descriptions(world_description)
 
     world["table"].set_material(fbmat_wood)
     world.spawn_all()
