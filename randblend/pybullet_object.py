@@ -1,7 +1,7 @@
 import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import ClassVar, Dict, Generic, Optional, Type, TypeVar
+from typing import ClassVar, Dict, Generic, Optional, Tuple, Type, TypeVar
 
 import pybullet
 
@@ -24,6 +24,11 @@ def serialize_to_json() -> str:
     descs = tuple([val.description for val in _spawned_objects.values()])
     wd = WorldDescription(descriptions=descs)
     return wd.to_json()
+
+
+def update_spawned_object_descriptions() -> None:
+    for val in _spawned_objects.values():
+        val.update_description()
 
 
 @dataclass
@@ -51,6 +56,17 @@ class BulletObject(ABC, Generic[ObjectDescriptionT]):
         pybullet.resetBasePositionAndOrientation(
             self.object_handle, translation, orientation, physicsClientId=self.client
         )
+
+    def get_pose(self) -> Tuple[Float3d, Float4d]:
+        trans, quat = pybullet.getBasePositionAndOrientation(
+            self.object_handle, physicsClientId=self.client
+        )
+        return trans, quat
+
+    def update_description(self) -> None:
+        trans, quat = self.get_pose()
+        self.description.pose.translation = trans
+        self.description.pose.orientation = quat
 
     @property
     def name(self):
