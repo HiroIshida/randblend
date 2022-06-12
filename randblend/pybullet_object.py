@@ -17,6 +17,14 @@ from randblend.description import (
 BulletObjectT = TypeVar("BulletObjectT", bound="BulletObject")
 
 
+_registered_objects: Dict[str, "BulletObject"] = {}
+
+
+def spawn_registered_objects():
+    for obj in _registered_objects.values():
+        obj.spawn_bullet_object()
+
+
 _spawned_objects: Dict[str, "BulletObject"] = {}  # set when bullet object is spawned
 
 
@@ -37,6 +45,10 @@ class BulletObject(ABC, Generic[ObjectDescriptionT]):
     description: ObjectDescriptionT
     client: int
     object_handle: Optional[int]
+
+    def __post_init__(self):
+        # register
+        _registered_objects[self.name] = self
 
     @classmethod
     def from_descriptoin(
