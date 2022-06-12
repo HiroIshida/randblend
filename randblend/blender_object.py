@@ -1,5 +1,5 @@
-import json
 import os
+import pickle
 import queue
 from abc import abstractmethod
 from dataclasses import dataclass
@@ -25,8 +25,8 @@ import randblend.utils as utils
 from randblend.description import (
     CubeObjectDescription,
     FileBasedObjectDescription,
+    ObjectDescription,
     ObjectDescriptionT,
-    WorldDescription,
 )
 from randblend.path import get_ambientcg_dataset_path
 
@@ -195,31 +195,25 @@ class BlenderCubeObject(BlenderObject[CubeObjectDescription]):
 
 class BlenderWorld(Dict[str, BlenderObject]):
     @classmethod
-    def from_world_description(cls, wd: WorldDescription) -> "BlenderWorld":
+    def from_descriptions(cls, descriptions: List[ObjectDescription]) -> "BlenderWorld":
         leaf_types = BlenderObject.get_all_leaf_types()
         table = {t.description_type: t for t in leaf_types}
 
-        d = {}
-        for description in wd.descriptions:
+        dd = {}
+        for description in descriptions:
             target_type: Type[BlenderObject] = table[type(description)]
             blender_object = target_type.from_descriptoin(description)
-            d[blender_object.name] = blender_object
-        return cls(d)
+            dd[blender_object.name] = blender_object
+        return cls(dd)
 
     @classmethod
-    def from_json_str(cls, json_str: str):
-        d = json.loads(json_str)
-        wd = WorldDescription.from_dict(d)
-        return cls.from_world_description(wd)
-
-    @classmethod
-    def from_json_file(cls, filepath: Union[Path, str]):
+    def from_pickle_file(cls, filepath: Union[Path, str]):
         if isinstance(filepath, str):
             filepath = Path(filepath)
         filepath = filepath.expanduser().absolute()
-        with filepath.open(mode="r") as f:
-            json_str = f.read()
-        return cls.from_json_str(json_str)
+        with filepath.open(mode="rb") as f:
+            descriptions = pickle.load(f)
+        return cls.from_descriptions(descriptions)
 
     def spawn_all(self):
         for obj in self.values():

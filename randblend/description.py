@@ -1,13 +1,13 @@
-import copy
 import json
 import math
-import queue
 import sys
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Type, TypeVar
+from typing import Dict, Optional, TypeVar
 
 import numpy as np
-from pydantic.dataclasses import dataclass
+from scipy.spatial.transform import Rotation
 
 from randblend.path import get_gso_dataset_path
 
@@ -16,104 +16,38 @@ if "bpy" in sys.modules:
 else:
     bpy = None
 
-DictableT = TypeVar("DictableT", bound="DictableMixIn")
-
-Float3d = Tuple[float, float, float]
-Float4d = Tuple[float, float, float, float]
-
 
 @dataclass
-class DictableMixIn:
-    @staticmethod
-    def get_all_leaf_types() -> List[Type["DictableMixIn"]]:
-        concrete_types: List[Type] = []
-        q = queue.Queue()  # type: ignore
-        q.put(DictableMixIn)
-        while not q.empty():
-            t: Type = q.get()
-            if len(t.__subclasses__()) == 0:
-                concrete_types.append(t)
+class Pose:
+    translation: np.ndarray
+    orientation: np.ndarray
 
-            for st in t.__subclasses__():
-                q.put(st)
-        return list(set(concrete_types))
-
-    def to_dict(self) -> Dict:
-        # NOTE: instead of asdict, the following doe sshallow-conversion to dict
-        d = {key: self.__dict__[key] for key in self.__dataclass_fields__}
-        d["type"] = self.__class__.__name__
-
-        for key, val in d.items():
-            if isinstance(val, DictableMixIn):
-                d[key] = val.to_dict()
-            if isinstance(val, tuple) or isinstance(val, list):
-                if isinstance(val[0], DictableMixIn):
-                    d[key] = tuple([e.to_dict() for e in val])
-        return d
-
-    @classmethod
-    def from_dict(cls: Type[DictableT], d: Dict) -> DictableT:
-        leaf_types = cls.get_all_leaf_types()
-        type_table = {t.__name__: t for t in leaf_types}
-
-        for key, val in d.items():
-
-            if isinstance(val, dict):
-                t = type_table[val["type"]]
-                d[key] = t.from_dict(val)
-
-            if isinstance(val, list) or isinstance(val, tuple):
-
-                def convert(e):
-                    if isinstance(e, dict):
-                        t = type_table[e["type"]]
-                        return t.from_dict(e)
-                    else:
-                        return e
-
-                d[key] = tuple([convert(e) for e in val])
-
-        d.pop("type", None)
-        return cls(**d)  # type: ignore
-
-    def to_json(self) -> str:
-        return json.dumps(self.to_dict(), indent=2)
-
-    @classmethod
-    def from_json(cls: Type[DictableT], json_str: str) -> DictableT:
-        return cls.from_dict(json.loads(json_str))
-
-
-@dataclass
-class Pose(DictableMixIn):
-    translation: Float3d
-    orientation: Float4d
+    def __post_init__(self):
+        assert self.translation.shape == (3,)
+        assert self.orientation.shape == (4,)
 
     @classmethod
     def identity(cls) -> "Pose":
-        return cls((0.0, 0.0, 0.0), (0.0, 0.0, 0.0, 1.0))
+        return cls(np.array([0.0, 0.0, 0.0]), np.array([0.0, 0.0, 0.0, 1.0]))
 
     @classmethod
     def create(
         cls,
-        translation: Optional[Float3d] = None,
-        orientation: Optional[Float4d] = None,
+        translation: Optional[np.ndarray] = None,
+        orientation: Optional[np.ndarray] = None,
     ) -> "Pose":
 
         if translation is None:
-            translation = (0.0, 0.0, 0.0)
+            translation = np.array([0.0, 0.0, 0.0])
 
         if orientation is None:
-            orientation = (0.0, 0.0, 0.0, 1.0)
-
-        assert isinstance(translation, tuple)
-        assert isinstance(orientation, tuple)
+            orientation = np.array([0.0, 0.0, 0.0, 1.0])
 
         return cls(translation, orientation)
 
 
 @dataclass
-class Inertia(DictableMixIn):
+class Inertia:
     ixx: float
     ixy: float
     ixz: float
@@ -121,8 +55,8 @@ class Inertia(DictableMixIn):
     iyz: float
     izz: float
 
-    def get_diagonal(self) -> Float3d:
-        return (self.ixx, self.iyy, self.izz)
+    def get_diagonal(self) -> np.ndarray:
+        return np.array([self.ixx, self.iyy, self.izz])
 
     @classmethod
     def from_mass(cls, mass: float) -> "Inertia":
@@ -141,24 +75,42 @@ class Inertia(DictableMixIn):
 
 
 @dataclass
-class RawDict(DictableMixIn):
-    data: Dict
-
-    def to_dict(self) -> Dict:
-        d = copy.deepcopy(self.data)
-        d["type"] = self.__class__.__name__
-        return d
-
-    @classmethod
-    def from_dict(cls: Type[DictableT], d: Dict) -> "RawDict":
-        d.pop("type", None)
-        return cls(d)
-
-
-@dataclass
-class ObjectDescription(DictableMixIn):
+class ObjectDescription(ABC):
     name: str
     pose: Pose
+
+    @abstractmethod
+    def get_bbox_min(self) -> np.ndarray:
+        pass
+
+    @abstractmethod
+    def get_bbox_max(self) -> np.ndarray:
+        pass
+
+    def sample_pose_on_top(self) -> Pose:
+        np.testing.assert_almost_equal(
+            self.pose.orientation, np.array([0, 0, 0.0, 1.0])
+        )
+
+        center = np.array(self.pose.translation)
+        extent = np.array(self.get_bbox_max() - self.get_bbox_min())  # type: ignore
+
+        xyz_min = center - 0.5 * extent
+        xy_min = xyz_min[:2]
+        xy_random = xy_min + np.random.rand(2) * extent[:2]
+
+        z_top = center[2] + extent[2]
+        ret = np.array(xy_random.tolist() + [z_top])
+
+        angle_rand = np.random.rand() * 360
+        orientation = Rotation.from_euler("z", angle_rand, degrees=True).as_quat()
+        return Pose(translation=ret, orientation=orientation)
+
+    def place_on_top_of(self, od: "ObjectDescription"):
+        pose = od.sample_pose_on_top()
+        z_offset = -self.get_bbox_min()[2]
+        pose.translation[2] += z_offset + 0.01
+        self.pose = pose
 
 
 ObjectDescriptionT = TypeVar("ObjectDescriptionT", bound="ObjectDescription")
@@ -166,44 +118,44 @@ ObjectDescriptionT = TypeVar("ObjectDescriptionT", bound="ObjectDescription")
 
 @dataclass
 class CubeObjectDescription(ObjectDescription):
-    shape: Float3d
+    shape: np.ndarray
     mass: float = 0.0
     inertia: Inertia = Inertia.zeros()
+
+    def __post_init__(self):
+        assert self.shape.shape == (3,)
 
     @classmethod
     def create_floor(cls) -> "CubeObjectDescription":
         name = "floor"
-        pose = Pose.create(translation=(0.0, 0.0, -0.05))
+        pose = Pose.create(translation=np.array([0.0, 0.0, -0.05]))
         mass = 0.0
         inertia = Inertia.zeros()
-        return cls(name, pose, (100.0, 100.0, 0.1), mass, inertia)
+        return cls(name, pose, np.array([100.0, 100.0, 0.1]), mass, inertia)
 
-    def sample_position_on_top(self) -> Float3d:
-        assert self.pose.orientation == (0.0, 0.0, 0.0, 1.0), "under construction"
+    def get_bbox_min(self) -> np.ndarray:
+        center = self.pose.translation
+        return center - self.shape * 0.5
 
-        center = np.array(self.pose.translation)
-        extent = np.array(self.shape)
-
-        xyz_min = center - 0.5 * extent
-        xy_min = xyz_min[:2]
-        xy_random = xy_min + np.random.rand(2) * extent[:2]
-
-        z_top = center[2] + extent[2]
-        ret = tuple(xy_random.tolist() + [z_top])
-        return ret
+    def get_bbox_max(self) -> np.ndarray:
+        center = self.pose.translation
+        return center + self.shape * 0.5
 
 
 @dataclass
 class FileBasedObjectDescription(ObjectDescription):
     scale: float  # blender can specify 3dim scaling, but pybullet can only scalar scaling
     path: str
-    bbox_min: Float3d
-    bbox_max: Float3d
-    metadata: RawDict
+    bbox_min: np.ndarray
+    bbox_max: np.ndarray
+    metadata: Dict
 
     def __post_init__(self):
         path = Path(self.path)
         assert path.is_absolute()
+
+        assert self.bbox_min.shape == (3,)
+        assert self.bbox_max.shape == (3,)
 
     @classmethod
     def from_gso_name(cls, name: str, pose: Optional[Pose] = None, scale: float = 1.0):
@@ -228,9 +180,12 @@ class FileBasedObjectDescription(ObjectDescription):
 
         bbox_min, bbox_max = info["kwargs"]["bounds"]
 
-        return cls(name, pose, scale, str(path), bbox_min, bbox_max, RawDict(info))
+        return cls(
+            name, pose, scale, str(path), np.array(bbox_min), np.array(bbox_max), info
+        )
 
+    def get_bbox_min(self) -> np.ndarray:
+        return self.bbox_min
 
-@dataclass
-class WorldDescription(DictableMixIn):
-    descriptions: Tuple[ObjectDescription, ...]
+    def get_bbox_max(self) -> np.ndarray:
+        return self.bbox_max

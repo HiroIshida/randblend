@@ -1,17 +1,16 @@
 import os
+import pickle
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import ClassVar, Dict, Generic, Optional, Tuple, Type, TypeVar
 
+import numpy as np
 import pybullet
 
 from randblend.description import (
     CubeObjectDescription,
     FileBasedObjectDescription,
-    Float3d,
-    Float4d,
     ObjectDescriptionT,
-    WorldDescription,
 )
 
 BulletObjectT = TypeVar("BulletObjectT", bound="BulletObject")
@@ -28,10 +27,9 @@ def spawn_registered_objects():
 _spawned_objects: Dict[str, "BulletObject"] = {}  # set when bullet object is spawned
 
 
-def serialize_to_json() -> str:
-    descs = tuple([val.description for val in _spawned_objects.values()])
-    wd = WorldDescription(descriptions=descs)
-    return wd.to_json()
+def serialize_spawned_object_to_pickle() -> bytes:
+    descriptions = [val.description for val in _spawned_objects.values()]
+    return pickle.dumps(descriptions)
 
 
 def update_spawned_object_descriptions() -> None:
@@ -64,12 +62,14 @@ class BulletObject(ABC, Generic[ObjectDescriptionT]):
         self.set_pose(pose.translation, pose.orientation)
         _spawned_objects[self.name] = self
 
-    def set_pose(self, translation: Float3d, orientation: Float4d):
+    def set_pose(self, translation: np.ndarray, orientation: np.ndarray):
+        assert translation.shape == (3,)
+        assert orientation.shape == (4,)
         pybullet.resetBasePositionAndOrientation(
             self.object_handle, translation, orientation, physicsClientId=self.client
         )
 
-    def get_pose(self) -> Tuple[Float3d, Float4d]:
+    def get_pose(self) -> Tuple[np.ndarray, np.ndarray]:
         trans, quat = pybullet.getBasePositionAndOrientation(
             self.object_handle, physicsClientId=self.client
         )
