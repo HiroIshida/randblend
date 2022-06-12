@@ -126,7 +126,7 @@ class BlenderObject(Generic[ObjectDescriptionT]):
         obj = self._spawn_blender_object()
         obj.location = description.pose.translation
         rot = Rotation.from_quat(description.pose.orientation)
-        obj.rotation_euler = tuple(rot.as_euler("zyx").tolist())
+        obj.rotation_euler = tuple(rot.as_euler("xyz").tolist())
         if self.texture is not None:
             obj.data.materials.append(bpy.data.materials[self.texture.name])
         self.obj = obj
