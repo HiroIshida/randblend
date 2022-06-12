@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
     fbmat_wood = FileBasedMaterial.from_ambientcg_id(material_table)
     fbmat_carpet = FileBasedMaterial.from_ambientcg_id(
-        material_floor, scale=(0.1, 0.1, 0.1)
+        material_floor, scale=(0.01, 0.01, 0.01)
     )
 
     bw = BlenderWorld.from_json_file("/tmp/randblend.json")
@@ -49,11 +49,11 @@ if __name__ == "__main__":
     utils.create_area_light(rotation=(0.0, math.pi * 0.1, -math.pi * 0.1), strength=100)
 
     camera = bpy.context.scene.camera
-    camera.location = (-0.0, -0.6, 3.0)
-    camera.rotation_euler = (0.3, 0.0, 0.0)
-    camera.data.lens = 60
+    camera.location = (-0.0, -0.4, 1.8)
+    camera.rotation_euler = (0.4, 0.0, 0.0)
+    camera.data.lens = 50
     camera.data.sensor_width = 70.0
-    camera.data.sensor_height = 40.0
+    camera.data.sensor_height = 60.0
     result = bpycv.render_data()
 
     # save result
