@@ -1,6 +1,7 @@
 import json
 import math
 import sys
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Optional, TypeVar
@@ -73,9 +74,39 @@ class Inertia:
 
 
 @dataclass
-class ObjectDescription:
+class ObjectDescription(ABC):
     name: str
     pose: Pose
+
+    @abstractmethod
+    def get_bbox_min(self) -> np.ndarray:
+        pass
+
+    @abstractmethod
+    def get_bbox_max(self) -> np.ndarray:
+        pass
+
+    def sample_position_on_top(self) -> np.ndarray:
+        np.testing.assert_almost_equal(
+            self.pose.orientation, np.array([0, 0, 0.0, 1.0])
+        )
+
+        center = np.array(self.pose.translation)
+        extent = np.array(self.get_bbox_max() - self.get_bbox_min())  # type: ignore
+
+        xyz_min = center - 0.5 * extent
+        xy_min = xyz_min[:2]
+        xy_random = xy_min + np.random.rand(2) * extent[:2]
+
+        z_top = center[2] + extent[2]
+        ret = np.array(xy_random.tolist() + [z_top])
+        return ret
+
+    def place_on_top_of(self, od: "ObjectDescription"):
+        pos_on_top = od.sample_position_on_top()
+        z_offset = -self.get_bbox_min()[2]
+        pos_on_top[2] += z_offset + 0.01
+        self.pose.translation = pos_on_top
 
 
 ObjectDescriptionT = TypeVar("ObjectDescriptionT", bound="ObjectDescription")
@@ -98,21 +129,13 @@ class CubeObjectDescription(ObjectDescription):
         inertia = Inertia.zeros()
         return cls(name, pose, np.array([100.0, 100.0, 0.1]), mass, inertia)
 
-    def sample_position_on_top(self) -> np.ndarray:
-        np.testing.assert_almost_equal(
-            self.pose.orientation, np.array([0, 0, 0.0, 1.0])
-        )
+    def get_bbox_min(self) -> np.ndarray:
+        center = self.pose.translation
+        return center - self.shape * 0.5
 
-        center = np.array(self.pose.translation)
-        extent = np.array(self.shape)
-
-        xyz_min = center - 0.5 * extent
-        xy_min = xyz_min[:2]
-        xy_random = xy_min + np.random.rand(2) * extent[:2]
-
-        z_top = center[2] + extent[2]
-        ret = np.array(xy_random.tolist() + [z_top])
-        return ret
+    def get_bbox_max(self) -> np.ndarray:
+        center = self.pose.translation
+        return center + self.shape * 0.5
 
 
 @dataclass
@@ -156,3 +179,9 @@ class FileBasedObjectDescription(ObjectDescription):
         return cls(
             name, pose, scale, str(path), np.array(bbox_min), np.array(bbox_max), info
         )
+
+    def get_bbox_min(self) -> np.ndarray:
+        return self.bbox_min
+
+    def get_bbox_max(self) -> np.ndarray:
+        return self.bbox_max

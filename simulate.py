@@ -18,10 +18,17 @@ from randblend.pybullet_object import (
     update_spawned_object_descriptions,
 )
 
+# table object
+pose = Pose.create(translation=np.array([0.0, 0.0, 0.8]))
+table_desc = CubeObjectDescription("table", pose, np.array([0.8, 0.5, 0.03]))
+CubeObjectBulletObject.from_descriptoin(table_desc)
+
+# meshes
 large_flat_gso_names = get_gso_names_by_shape("LargeFlatShape")
 gso_name = random.choice(large_flat_gso_names)
 pose = Pose.create(translation=np.array([0.0, 0.0, 0.8]))
 desc = FileBasedObjectDescription.from_gso_name(gso_name, scale=1, pose=pose)
+desc.place_on_top_of(table_desc)
 FileBasedBulletObject.from_descriptoin(desc)
 
 
@@ -34,10 +41,6 @@ FileBasedBulletObject.from_descriptoin(desc)
 #    desc = FileBasedObjectDescription.from_gso_name(gso_name, scale=1, pose=pose)
 #    FileBasedBulletObject.from_descriptoin(desc)
 
-# table object
-pose = Pose.create(translation=np.array([0.0, 0.0, 0.8]))
-table_desc = CubeObjectDescription("table", pose, np.array([0.8, 0.5, 0.03]))
-CubeObjectBulletObject.from_descriptoin(table_desc)
 
 # floor object
 floor_desc = CubeObjectDescription.create_floor()
