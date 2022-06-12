@@ -112,7 +112,7 @@ class Pose(DictableMixIn):
 
 
 @dataclass
-class Inertia:
+class Inertia(DictableMixIn):
     ixx: float
     ixy: float
     ixz: float
