@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Dict, Optional, TypeVar
 
 import numpy as np
+from scipy.spatial.transform import Rotation
 
 from randblend.path import get_gso_dataset_path
 
@@ -86,7 +87,7 @@ class ObjectDescription(ABC):
     def get_bbox_max(self) -> np.ndarray:
         pass
 
-    def sample_position_on_top(self) -> np.ndarray:
+    def sample_pose_on_top(self) -> Pose:
         np.testing.assert_almost_equal(
             self.pose.orientation, np.array([0, 0, 0.0, 1.0])
         )
@@ -100,13 +101,16 @@ class ObjectDescription(ABC):
 
         z_top = center[2] + extent[2]
         ret = np.array(xy_random.tolist() + [z_top])
-        return ret
+
+        angle_rand = np.random.rand() * 360
+        orientation = Rotation.from_euler("z", angle_rand, degrees=True).as_quat()
+        return Pose(translation=ret, orientation=orientation)
 
     def place_on_top_of(self, od: "ObjectDescription"):
-        pos_on_top = od.sample_position_on_top()
+        pose = od.sample_pose_on_top()
         z_offset = -self.get_bbox_min()[2]
-        pos_on_top[2] += z_offset + 0.01
-        self.pose.translation = pos_on_top
+        pose.translation[2] += z_offset + 0.01
+        self.pose = pose
 
 
 ObjectDescriptionT = TypeVar("ObjectDescriptionT", bound="ObjectDescription")
