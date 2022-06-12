@@ -182,6 +182,8 @@ class CubeObjectDescription(ObjectDescription):
 class FileBasedObjectDescription(ObjectDescription):
     scale: float  # blender can specify 3dim scaling, but pybullet can only scalar scaling
     path: str
+    bbox_min: Float3d
+    bbox_max: Float3d
     metadata: RawDict
 
     def __post_init__(self):
@@ -209,7 +211,9 @@ class FileBasedObjectDescription(ObjectDescription):
         if pose is None:
             pose = Pose.identity()
 
-        return cls(name, pose, scale, str(path), RawDict(info))
+        bbox_min, bbox_max = info["kwargs"]["bounds"]
+
+        return cls(name, pose, scale, str(path), bbox_min, bbox_max, RawDict(info))
 
 
 @dataclass
