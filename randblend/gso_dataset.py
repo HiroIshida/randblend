@@ -39,3 +39,18 @@ def randomly_pick_gso_name() -> str:
     lst = get_all_gso_names()
     name = random.choice(lst)
     return name
+
+
+@lru_cache(maxsize=None)
+def get_gso_names_by_shape(shape_type: str) -> List[str]:
+    assert shape_type in [
+        "LargeFlatShape",
+        "MediumFlatShape",
+        "SmallFlatShape",
+        "ContainerShape",
+    ]
+    gso_dataset_path = get_gso_dataset_path()
+    shape_name_table_path = gso_dataset_path / "shape_name_table.json"
+    with shape_name_table_path.open(mode="r") as f:
+        d = json.load(f)
+    return d[shape_type]

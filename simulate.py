@@ -1,4 +1,5 @@
-import numpy as np
+import random
+
 import pybullet
 import pybullet_data
 
@@ -7,7 +8,7 @@ from randblend.description import (
     FileBasedObjectDescription,
     Pose,
 )
-from randblend.gso_dataset import randomly_pick_gso_name
+from randblend.gso_dataset import get_gso_names_by_shape
 from randblend.pybullet_object import (
     CubeObjectBulletObject,
     FileBasedBulletObject,
@@ -16,14 +17,21 @@ from randblend.pybullet_object import (
     update_spawned_object_descriptions,
 )
 
+large_flat_gso_names = get_gso_names_by_shape("LargeFlatShape")
+gso_name = random.choice(large_flat_gso_names)
+pose = Pose.create(translation=(0.0, 0.0, 0.8))
+desc = FileBasedObjectDescription.from_gso_name(gso_name, scale=1, pose=pose)
+FileBasedBulletObject.from_descriptoin(desc)
+
+
 # mesh object
-for _ in range(6):
-    gso_name = randomly_pick_gso_name()
-    pose = Pose.create(
-        translation=(np.random.randn() * 0.1, np.random.randn() * 0.2, 1.3)
-    )
-    desc = FileBasedObjectDescription.from_gso_name(gso_name, scale=1, pose=pose)
-    FileBasedBulletObject.from_descriptoin(desc)
+# for _ in range(6):
+#    gso_name = randomly_pick_gso_name()
+#    pose = Pose.create(
+#        translation=(np.random.randn() * 0.1, np.random.randn() * 0.2, 1.3)
+#    )
+#    desc = FileBasedObjectDescription.from_gso_name(gso_name, scale=1, pose=pose)
+#    FileBasedBulletObject.from_descriptoin(desc)
 
 # table object
 pose = Pose.create(translation=(0.0, 0.0, 0.8))
