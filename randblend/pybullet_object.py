@@ -1,4 +1,5 @@
 import os
+import pickle
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import ClassVar, Dict, Generic, Optional, Tuple, Type, TypeVar
@@ -11,7 +12,6 @@ from randblend.description import (
     Float3d,
     Float4d,
     ObjectDescriptionT,
-    WorldDescription,
 )
 
 BulletObjectT = TypeVar("BulletObjectT", bound="BulletObject")
@@ -28,10 +28,8 @@ def spawn_registered_objects():
 _spawned_objects: Dict[str, "BulletObject"] = {}  # set when bullet object is spawned
 
 
-def serialize_to_json() -> str:
-    descs = tuple([val.description for val in _spawned_objects.values()])
-    wd = WorldDescription(descriptions=descs)
-    return wd.to_json()
+def serialize_spawned_object_to_pickle() -> str:
+    return pickle.dumps(_spawned_objects)
 
 
 def update_spawned_object_descriptions() -> None:

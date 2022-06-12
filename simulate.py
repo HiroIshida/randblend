@@ -1,5 +1,6 @@
 import random
 
+import numpy as np
 import pybullet
 import pybullet_data
 
@@ -12,14 +13,14 @@ from randblend.gso_dataset import get_gso_names_by_shape
 from randblend.pybullet_object import (
     CubeObjectBulletObject,
     FileBasedBulletObject,
-    serialize_to_json,
+    serialize_spawned_object_to_pickle,
     spawn_registered_objects,
     update_spawned_object_descriptions,
 )
 
 large_flat_gso_names = get_gso_names_by_shape("LargeFlatShape")
 gso_name = random.choice(large_flat_gso_names)
-pose = Pose.create(translation=(0.0, 0.0, 0.8))
+pose = Pose.create(translation=np.array([0.0, 0.0, 0.8]))
 desc = FileBasedObjectDescription.from_gso_name(gso_name, scale=1, pose=pose)
 FileBasedBulletObject.from_descriptoin(desc)
 
@@ -34,7 +35,7 @@ FileBasedBulletObject.from_descriptoin(desc)
 #    FileBasedBulletObject.from_descriptoin(desc)
 
 # table object
-pose = Pose.create(translation=(0.0, 0.0, 0.8))
+pose = Pose.create(translation=np.array([0.0, 0.0, 0.8]))
 table_desc = CubeObjectDescription("table", pose, (0.8, 0.5, 0.03))
 CubeObjectBulletObject.from_descriptoin(table_desc)
 
@@ -57,8 +58,8 @@ for i in range(300):
     pybullet.stepSimulation()
     update_spawned_object_descriptions()
 
-json_str = serialize_to_json()
-with open("/tmp/randblend.json", "w") as f:
-    f.write(json_str)
+pickle_str = serialize_spawned_object_to_pickle()
+with open("/tmp/randblend.json", "wb") as f:
+    f.write(pickle_str)
 
 time.sleep(100)
