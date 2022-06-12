@@ -6,7 +6,6 @@ from randblend.description import (
     FileBasedObjectDescription,
     Pose,
 )
-from randblend.path import get_gso_dataset_path
 from randblend.pybullet_object import (
     CubeObjectBulletObject,
     FileBasedBulletObject,
@@ -14,9 +13,10 @@ from randblend.pybullet_object import (
 )
 
 # mesh object
-path = (get_gso_dataset_path() / "CITY_TAXI_POLICE_CAR").expanduser()
 pose = Pose.create(translation=(0.0, 0.0, 1.9))
-desc = FileBasedObjectDescription.from_gso_path(path, scale=1, pose=pose)
+desc = FileBasedObjectDescription.from_gso_name(
+    "CITY_TAXI_POLICE_CAR", scale=1, pose=pose
+)
 obj = FileBasedBulletObject.from_descriptoin(desc)
 
 # table object
@@ -38,7 +38,6 @@ pybullet.setGravity(0, 0, -10)
 obj.spawn_bullet_object()
 table.spawn_bullet_object()
 floor.spawn_bullet_object()
-pybullet.saveWorld("hoge.txt")
 
 import time
 

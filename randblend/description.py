@@ -8,6 +8,8 @@ from typing import Dict, List, Optional, Tuple, Type, TypeVar
 
 from pydantic.dataclasses import dataclass
 
+from randblend.path import get_gso_dataset_path
+
 if "bpy" in sys.modules:
     import bpy
 else:
@@ -185,6 +187,11 @@ class FileBasedObjectDescription(ObjectDescription):
     def __post_init__(self):
         path = Path(self.path)
         assert path.is_absolute()
+
+    @classmethod
+    def from_gso_name(cls, name: str, pose: Optional[Pose] = None, scale: float = 1.0):
+        gso_path = get_gso_dataset_path() / name
+        return cls.from_gso_path(gso_path, pose=pose, scale=scale)
 
     @classmethod
     def from_gso_path(
