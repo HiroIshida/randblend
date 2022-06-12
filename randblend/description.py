@@ -90,7 +90,7 @@ class Pose(DictableMixIn):
 
     @classmethod
     def identity(cls) -> "Pose":
-        return cls((0.0, 0.0, 0.0), (1.0, 0.0, 0.0, 0.0))
+        return cls((0.0, 0.0, 0.0), (0.0, 0.0, 0.0, 1.0))
 
     @classmethod
     def create(
@@ -103,7 +103,7 @@ class Pose(DictableMixIn):
             translation = (0.0, 0.0, 0.0)
 
         if orientation is None:
-            orientation = (1.0, 0.0, 0.0, 0.0)
+            orientation = (0.0, 0.0, 0.0, 1.0)
 
         assert isinstance(translation, tuple)
         assert isinstance(orientation, tuple)
