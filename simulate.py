@@ -36,7 +36,7 @@ FileBasedBulletObject.from_descriptoin(desc)
 
 # table object
 pose = Pose.create(translation=np.array([0.0, 0.0, 0.8]))
-table_desc = CubeObjectDescription("table", pose, (0.8, 0.5, 0.03))
+table_desc = CubeObjectDescription("table", pose, np.array([0.8, 0.5, 0.03]))
 CubeObjectBulletObject.from_descriptoin(table_desc)
 
 # floor object

@@ -4,13 +4,12 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import ClassVar, Dict, Generic, Optional, Tuple, Type, TypeVar
 
+import numpy as np
 import pybullet
 
 from randblend.description import (
     CubeObjectDescription,
     FileBasedObjectDescription,
-    Float3d,
-    Float4d,
     ObjectDescriptionT,
 )
 
@@ -63,12 +62,14 @@ class BulletObject(ABC, Generic[ObjectDescriptionT]):
         self.set_pose(pose.translation, pose.orientation)
         _spawned_objects[self.name] = self
 
-    def set_pose(self, translation: Float3d, orientation: Float4d):
+    def set_pose(self, translation: np.ndarray, orientation: np.ndarray):
+        assert translation.shape == (3,)
+        assert orientation.shape == (4,)
         pybullet.resetBasePositionAndOrientation(
             self.object_handle, translation, orientation, physicsClientId=self.client
         )
 
-    def get_pose(self) -> Tuple[Float3d, Float4d]:
+    def get_pose(self) -> Tuple[np.ndarray, np.ndarray]:
         trans, quat = pybullet.getBasePositionAndOrientation(
             self.object_handle, physicsClientId=self.client
         )

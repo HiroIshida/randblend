@@ -3,7 +3,7 @@ import math
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Optional, Tuple, TypeVar
+from typing import Dict, Optional, TypeVar
 
 import numpy as np
 
@@ -13,9 +13,6 @@ if "bpy" in sys.modules:
     import bpy
 else:
     bpy = None
-
-Float3d = Tuple[float, float, float]
-Float4d = Tuple[float, float, float, float]
 
 
 @dataclass
@@ -56,8 +53,8 @@ class Inertia:
     iyz: float
     izz: float
 
-    def get_diagonal(self) -> Float3d:
-        return (self.ixx, self.iyy, self.izz)
+    def get_diagonal(self) -> np.ndarray:
+        return np.array([self.ixx, self.iyy, self.izz])
 
     @classmethod
     def from_mass(cls, mass: float) -> "Inertia":
@@ -86,9 +83,12 @@ ObjectDescriptionT = TypeVar("ObjectDescriptionT", bound="ObjectDescription")
 
 @dataclass
 class CubeObjectDescription(ObjectDescription):
-    shape: Float3d
+    shape: np.ndarray
     mass: float = 0.0
     inertia: Inertia = Inertia.zeros()
+
+    def __post_init__(self):
+        assert self.shape.shape == (3,)
 
     @classmethod
     def create_floor(cls) -> "CubeObjectDescription":
@@ -98,7 +98,7 @@ class CubeObjectDescription(ObjectDescription):
         inertia = Inertia.zeros()
         return cls(name, pose, np.array([100.0, 100.0, 0.1]), mass, inertia)
 
-    def sample_position_on_top(self) -> Float3d:
+    def sample_position_on_top(self) -> np.ndarray:
         np.testing.assert_almost_equal(
             self.pose.orientation, np.array([0, 0, 0.0, 1.0])
         )
@@ -111,7 +111,7 @@ class CubeObjectDescription(ObjectDescription):
         xy_random = xy_min + np.random.rand(2) * extent[:2]
 
         z_top = center[2] + extent[2]
-        ret = tuple(xy_random.tolist() + [z_top])
+        ret = np.array(xy_random.tolist() + [z_top])
         return ret
 
 
@@ -119,13 +119,16 @@ class CubeObjectDescription(ObjectDescription):
 class FileBasedObjectDescription(ObjectDescription):
     scale: float  # blender can specify 3dim scaling, but pybullet can only scalar scaling
     path: str
-    bbox_min: Float3d
-    bbox_max: Float3d
+    bbox_min: np.ndarray
+    bbox_max: np.ndarray
     metadata: Dict
 
     def __post_init__(self):
         path = Path(self.path)
         assert path.is_absolute()
+
+        assert self.bbox_min.shape == (3,)
+        assert self.bbox_max.shape == (3,)
 
     @classmethod
     def from_gso_name(cls, name: str, pose: Optional[Pose] = None, scale: float = 1.0):
@@ -150,4 +153,6 @@ class FileBasedObjectDescription(ObjectDescription):
 
         bbox_min, bbox_max = info["kwargs"]["bounds"]
 
-        return cls(name, pose, scale, str(path), bbox_min, bbox_max, info)
+        return cls(
+            name, pose, scale, str(path), np.array(bbox_min), np.array(bbox_max), info
+        )
