@@ -97,15 +97,33 @@ def match_keyward_conditions(gso_name, include_keywards, exclude_keywards):
     return True
 
 
+def get_min_max_width(jsonfile_path):
+    with jsonfile_path.open(mode="r") as f:
+        obj = json.load(f)
+    bbox_min, bbox_max = obj["kwargs"]["bounds"]
+    width_list = [u - l for u, l in zip(bbox_max, bbox_min)]
+
+    min_width = min(width_list)
+    max_width = max(width_list)
+    return min_width, max_width
+
+
 if __name__ == "__main__":
     shape_name_table = {
         "LargeFlatShape": [],
         "MediumFlatShape": [],
         "SmallFlatShape": [],
         "ContainerShape": [],
+        "TinyShape": [],
     }
 
     gso_dataset_path = get_gso_dataset_path()
+
+    for gso_name in get_all_gso_names():
+        jsonfile_path = gso_dataset_path / gso_name / "data.json"
+        min_width, max_width = get_min_max_width(jsonfile_path)
+        if max_width < 0.1:
+            shape_name_table["TinyShape"].append(gso_name)
 
     flat_objects = []
     for gso_name in get_all_gso_names():
@@ -115,23 +133,16 @@ if __name__ == "__main__":
             continue
 
         jsonfile_path = gso_dataset_path / gso_name / "data.json"
+        min_width, max_width = get_min_max_width(jsonfile_path)
 
-        with jsonfile_path.open(mode="r") as f:
-            obj = json.load(f)
-            bbox_min, bbox_max = obj["kwargs"]["bounds"]
-            width_list = [u - l for u, l in zip(bbox_max, bbox_min)]
-
-            min_width = min(width_list)
-            max_width = max(width_list)
-
-            if min_width * 4 > max_width:
-                continue
-            if max_width > 0.3:
-                shape_name_table["LargeFlatShape"].append(gso_name)
-            elif max_width > 0.15:
-                shape_name_table["MediumFlatShape"].append(gso_name)
-            else:
-                shape_name_table["SmallFlatShape"].append(gso_name)
+        if min_width * 4 > max_width:
+            continue
+        if max_width > 0.3:
+            shape_name_table["LargeFlatShape"].append(gso_name)
+        elif max_width > 0.15:
+            shape_name_table["MediumFlatShape"].append(gso_name)
+        else:
+            shape_name_table["SmallFlatShape"].append(gso_name)
 
     for gso_name in get_all_gso_names():
         if match_keyward_conditions(
