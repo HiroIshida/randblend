@@ -6,6 +6,7 @@ sys.path.append(working_dir_path)
 sys.path.extend(["/home/h-ishida/.pyenv/versions/3.10.2/lib/python3.10/site-packages"])
 
 
+import math
 import random
 
 import bpy
@@ -13,6 +14,7 @@ import bpycv
 import cv2
 import numpy as np
 
+import randblend.utils as utils
 from randblend.blender_object import BlenderWorld, FileBasedMaterial
 from randblend.dataset import Dataset
 from randblend.path import get_texture_metainfo_path
@@ -44,9 +46,11 @@ if __name__ == "__main__":
     bw["floor"].set_material(fbmat_carpet)
     bw.spawn_all()
 
+    utils.create_area_light(rotation=(0.0, math.pi * 0.1, -math.pi * 0.1), strength=100)
+
     camera = bpy.context.scene.camera
-    camera.location = (-0.0, -0.2, 3.0)
-    camera.rotation_euler = (0.0, 0.0, 0.0)
+    camera.location = (-0.0, -0.6, 3.0)
+    camera.rotation_euler = (0.3, 0.0, 0.0)
     camera.data.lens = 60
     camera.data.sensor_width = 70.0
     camera.data.sensor_height = 40.0
