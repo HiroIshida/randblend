@@ -114,6 +114,7 @@ class CubeObjectBulletObject(BulletObject[CubeObjectDescription]):
             body_id, pose.translation, pose.orientation
         )
         pybullet.changeDynamics(body_id, -1, mass=description.mass)
+        pybullet.changeDynamics(body_id, -1, restitution=0.1, linearDamping=20)
         pybullet.changeDynamics(
             body_id, -1, localInertiaDiagonal=description.inertia.get_diagonal()
         )
