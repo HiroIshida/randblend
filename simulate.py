@@ -9,7 +9,7 @@ from randblend.description import (
     FileBasedObjectDescription,
     Pose,
 )
-from randblend.gso_dataset import get_gso_names_by_shape
+from randblend.gso_dataset import get_all_gso_names, get_gso_names_by_shape
 from randblend.pybullet_object import (
     CubeObjectBulletObject,
     FileBasedBulletObject,
@@ -18,29 +18,37 @@ from randblend.pybullet_object import (
     update_spawned_object_descriptions,
 )
 
-# table object
-pose = Pose.create(translation=np.array([0.0, 0.0, 0.8]))
-table_desc = CubeObjectDescription("table", pose, np.array([0.8, 0.5, 0.03]))
-CubeObjectBulletObject.from_descriptoin(table_desc)
-
 # meshes
-for _ in range(2):
-    large_flat_gso_names = get_gso_names_by_shape("ContainerShape")
-    gso_name = random.choice(large_flat_gso_names)
-    desc = FileBasedObjectDescription.from_gso_name(gso_name, pose=Pose.identity())
-    desc.place_on_top_of(table_desc)
-    FileBasedBulletObject.from_descriptoin(desc)
+containre_gso_names = get_gso_names_by_shape("LargeContainerShape")
+tiny_gso_names = get_gso_names_by_shape("TinyShape")
 
 
-gso_names = get_gso_names_by_shape("TinyShape")
-for _ in range(12):
-    gso_name = random.choice(gso_names)
-    desc = FileBasedObjectDescription.from_gso_name(
-        gso_name, scale=1, pose=Pose.identity()
+def myrand(a):
+    return np.array([np.random.rand() * a, np.random.rand() * a, 0.0]) - np.array(
+        [0.5 * a, 0.5 * a, 0.0]
     )
-    pose = table_desc.sample_pose_on_top()
-    pose.translation[2] += 0.1
-    desc.pose = pose
+
+
+for _ in range(3):
+    gso_name = random.choice(containre_gso_names)
+    trans = myrand(0.8) + np.array([0, 0, 0.05])
+    pose = Pose.create(translation=trans)
+    desc_container = FileBasedObjectDescription.from_gso_name(gso_name, pose=pose)
+    FileBasedBulletObject.from_descriptoin(desc_container)
+
+    for _ in range(4):
+        gso_name = random.choice(tiny_gso_names)
+        desc = FileBasedObjectDescription.from_gso_name(gso_name, pose=Pose.create())
+        FileBasedBulletObject.from_descriptoin(desc)
+        desc.place_on_top_of(desc_container)
+
+
+gso_names = get_all_gso_names()
+for _ in range(3):
+    gso_name = random.choice(gso_names)
+    trans = myrand(0.6) + np.array([0, 0, 0.2 + np.random.rand() * 0.2])
+    pose = Pose.create(translation=trans)
+    desc = FileBasedObjectDescription.from_gso_name(gso_name, pose=pose)
     FileBasedBulletObject.from_descriptoin(desc)
 
 
@@ -49,17 +57,16 @@ floor_desc = CubeObjectDescription.create_floor()
 CubeObjectBulletObject.from_descriptoin(floor_desc)
 
 
-pybullet.connect(pybullet.GUI)
+pybullet.connect(pybullet.DIRECT)
 pybullet.setAdditionalSearchPath(pybullet_data.getDataPath())  # used by loadURDF
 pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, 0)
 pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_SHADOWS, 0)
-pybullet.setGravity(0, 0, -10)
+pybullet.setGravity(0, 0, -10.0)
 
 spawn_registered_objects()
 
-import time
 
-for i in range(300):
+for i in range(1000):
     pybullet.stepSimulation()
     update_spawned_object_descriptions()
 
@@ -67,4 +74,4 @@ pickle_str = serialize_spawned_object_to_pickle()
 with open("/tmp/randblend.json", "wb") as f:
     f.write(pickle_str)
 
-time.sleep(100)
+# time.sleep(100)

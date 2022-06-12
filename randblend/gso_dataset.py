@@ -49,6 +49,7 @@ def get_gso_names_by_shape(shape_type: str) -> List[str]:
         "SmallFlatShape",
         "ContainerShape",
         "TinyShape",
+        "LargeContainerShape",
     ]
     gso_dataset_path = get_gso_dataset_path()
     shape_name_table_path = gso_dataset_path / "shape_name_table.json"

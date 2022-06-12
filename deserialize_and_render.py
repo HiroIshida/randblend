@@ -42,14 +42,14 @@ if __name__ == "__main__":
     )
 
     bw = BlenderWorld.from_pickle_file("/tmp/randblend.json")
-    bw["table"].set_material(fbmat_wood)
+    # bw["table"].set_material(fbmat_wood)
     bw["floor"].set_material(fbmat_carpet)
     bw.spawn_all()
 
     utils.create_area_light(rotation=(0.0, math.pi * 0.1, -math.pi * 0.1), strength=100)
 
     camera = bpy.context.scene.camera
-    camera.location = (-0.0, -0.4, 1.8)
+    camera.location = (-0.0, -0.2, 0.9)
     camera.rotation_euler = (0.4, 0.0, 0.0)
     camera.data.lens = 50
     camera.data.sensor_width = 70.0

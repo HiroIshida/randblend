@@ -113,7 +113,9 @@ if __name__ == "__main__":
         "LargeFlatShape": [],
         "MediumFlatShape": [],
         "SmallFlatShape": [],
+        "LargeContainerShape": [],
         "ContainerShape": [],
+        "MediumShape": [],
         "TinyShape": [],
     }
 
@@ -124,6 +126,8 @@ if __name__ == "__main__":
         min_width, max_width = get_min_max_width(jsonfile_path)
         if max_width < 0.1:
             shape_name_table["TinyShape"].append(gso_name)
+        elif max_width < 0.2:
+            shape_name_table["MediumShape"].append(gso_name)
 
     flat_objects = []
     for gso_name in get_all_gso_names():
@@ -139,7 +143,7 @@ if __name__ == "__main__":
             continue
         if max_width > 0.3:
             shape_name_table["LargeFlatShape"].append(gso_name)
-        elif max_width > 0.15:
+        elif max_width > 0.22:
             shape_name_table["MediumFlatShape"].append(gso_name)
         else:
             shape_name_table["SmallFlatShape"].append(gso_name)
@@ -150,7 +154,10 @@ if __name__ == "__main__":
             container_object_include_keywards,
             container_object_exclude_keywards,
         ):
-            shape_name_table["ContainerShape"].append(gso_name)
+            jsonfile_path = gso_dataset_path / gso_name / "data.json"
+            min_width, max_width = get_min_max_width(jsonfile_path)
+            if max_width > 0.2:
+                shape_name_table["LargeContainerShape"].append(gso_name)
 
     shape_name_table_path = gso_dataset_path / "shape_name_table.json"
     with shape_name_table_path.open(mode="w") as f:

@@ -109,7 +109,7 @@ class ObjectDescription(ABC):
     def place_on_top_of(self, od: "ObjectDescription"):
         pose = od.sample_pose_on_top()
         z_offset = -self.get_bbox_min()[2]
-        pose.translation[2] += z_offset + 0.01
+        pose.translation[2] += z_offset + np.random.rand() * 0.05
         self.pose = pose
 
 
