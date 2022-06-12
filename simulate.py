@@ -1,5 +1,3 @@
-import time
-
 import pybullet
 import pybullet_data
 
@@ -9,12 +7,16 @@ from randblend.description import (
     Pose,
 )
 from randblend.path import get_gso_dataset_path
-from randblend.pybullet_object import CubeObjectBulletObject, FileBasedBulletObject
+from randblend.pybullet_object import (
+    CubeObjectBulletObject,
+    FileBasedBulletObject,
+    serialize_to_json,
+)
 
 path = (get_gso_dataset_path() / "CITY_TAXI_POLICE_CAR").expanduser()
 
 pose = Pose.create(translation=(0.0, 0.0, 0.9))
-desc = FileBasedObjectDescription.from_gso_path(path, scale = 5, pose=pose)
+desc = FileBasedObjectDescription.from_gso_path(path, scale=1, pose=pose)
 obj = FileBasedBulletObject.from_descriptoin(desc)
 
 pose = Pose.create(translation=(0.0, 0.0, 0.8))
@@ -30,5 +32,6 @@ planeId = pybullet.loadURDF("plane.urdf")
 
 obj.spawn_bullet_object()
 table.spawn_bullet_object()
-
-time.sleep(10)
+json_str = serialize_to_json()
+with open("/tmp/randblend.json", "w") as f:
+    f.write(json_str)

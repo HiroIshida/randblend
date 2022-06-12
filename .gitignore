@@ -1,4 +1,6 @@
 *.png
+*.jpg
+*.json
 /texture_dataset
 action.sh
 

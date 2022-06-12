@@ -73,7 +73,7 @@ class DictableMixIn:
         return cls(**d)  # type: ignore
 
     def to_json(self) -> str:
-        return json.dumps(self.to_dict())
+        return json.dumps(self.to_dict(), indent=2)
 
     @classmethod
     def from_json(cls: Type[DictableT], json_str: str) -> DictableT:

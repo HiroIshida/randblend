@@ -1,3 +1,4 @@
+import json
 import os
 import queue
 from abc import abstractmethod
@@ -14,6 +15,7 @@ from typing import (
     Tuple,
     Type,
     TypeVar,
+    Union,
 )
 
 import bpy
@@ -202,6 +204,21 @@ class BlenderWorld(Dict[str, BlenderObject]):
             blender_object = target_type.from_descriptoin(description)
             d[blender_object.name] = blender_object
         return cls(d)
+
+    @classmethod
+    def from_json_str(cls, json_str: str):
+        d = json.loads(json_str)
+        wd = WorldDescription.from_dict(d)
+        return cls.from_world_description(wd)
+
+    @classmethod
+    def from_json_file(cls, filepath: Union[Path, str]):
+        if isinstance(filepath, str):
+            filepath = Path(filepath)
+        filepath = filepath.expanduser().absolute()
+        with filepath.open(mode="r") as f:
+            json_str = f.read()
+        return cls.from_json_str(json_str)
 
     def spawn_all(self):
         for obj in self.values():

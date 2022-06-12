@@ -11,10 +11,10 @@ from typing import Tuple
 
 import bpy
 import bpycv
-import mathutils
-from scipy.spatial.transform import Rotation
 import cv2
+import mathutils
 import numpy as np
+from scipy.spatial.transform import Rotation
 
 import randblend.utils as utils
 from randblend.blender_object import BlenderWorld, FileBasedMaterial
@@ -53,8 +53,8 @@ if __name__ == "__main__":
     bpy.context.scene.frame_set(1)
     bpy.context.scene.render.engine = "CYCLES"
     bpy.context.scene.cycles.samples = 8
-    #bpy.context.scene.render.resolution_y = 512
-    #bpy.context.scene.render.resolution_x = 512
+    # bpy.context.scene.render.resolution_y = 512
+    # bpy.context.scene.render.resolution_x = 512
 
     # prepare material
     fbmat_wood = FileBasedMaterial.from_ambientcg_id(material_table)
@@ -81,9 +81,6 @@ if __name__ == "__main__":
     descriptions.append(obj_description)
     world_description = WorldDescription(descriptions)
 
-    with open("hoge.json", "w") as f:
-        f.write(world_description.to_json())
-
     world = BlenderWorld.from_world_description(world_description)
 
     world["table"].set_material(fbmat_wood)
@@ -102,13 +99,12 @@ if __name__ == "__main__":
     floor.data.materials.append(bpy.data.materials[fbmat_carpet.name])
 
     camera = bpy.context.scene.camera
-    camera.location = (-0., -0.2, 3.)
+    camera.location = (-0.0, -0.2, 3.0)
     camera.rotation_euler = (0.0, 0.0, 0.0)
     camera.data.lens = 60
     camera.data.sensor_width = 70.0
     camera.data.sensor_height = 40.0
     result = bpycv.render_data()
-
 
     # save result
     cv2.imwrite(
