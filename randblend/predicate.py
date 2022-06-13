@@ -1,7 +1,7 @@
 import itertools
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import List, Type, TypeVar
+from typing import Dict, List, Type, TypeVar
 
 import numpy as np
 import pybullet
@@ -21,15 +21,18 @@ class AbstractPredicate:
         pass
 
 
+@dataclass
+class ImageWithPredicates:
+    img: np.ndarray
+    seg: np.ndarray
+    predicates: List[AbstractPredicate]
+    seg_id_map: Dict[str, int]
+
+
 PredicateT = TypeVar("PredicateT", bound=AbstractPredicate)
 
 
-@dataclass
-class IsTouchingPredicate:
-    id1: str
-    id2: str
-    value: float
-
+class IsTouchingPredicate(AbstractPredicate):
     @classmethod
     def from_objects(cls, obj1: BulletObject, obj2: BulletObject, **kwargs):
         res = pybullet.getContactPoints(obj1.object_handle, obj2.object_handle)

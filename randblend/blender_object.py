@@ -36,7 +36,14 @@ OptionalPath = Optional[Path]
 
 
 _registered_materials: Set[str] = set()
-_registered_object_count_holder: List = [0]
+_registered_objects: Dict[str, "BlenderObject"] = {}
+
+
+def get_inst_id_map() -> Dict[str, int]:
+    d = {}
+    for key, val in _registered_objects.items():
+        d[key] = val.inst_id
+    return d
 
 
 @dataclass
@@ -131,9 +138,15 @@ class BlenderObject(Generic[ObjectDescriptionT]):
             obj.data.materials.append(bpy.data.materials[self.texture.name])
         self.obj = obj
 
-        id_offset = 1024  # some random value
-        _registered_object_count_holder[0] += 1
-        self.obj["inst_id"] = id_offset + _registered_object_count_holder[0]
+        _registered_objects[self.name] = self
+        inst_id = len(_registered_objects) - 1
+        assert inst_id > -1 and inst_id < 256  # currently to output picture as np.uint8
+        self.obj["inst_id"] = inst_id
+
+    @property
+    def inst_id(self) -> Optional[int]:
+        assert "inst_id" in self.obj
+        return self.obj["inst_id"]
 
     @abstractmethod
     def _spawn_blender_object(self) -> Any:

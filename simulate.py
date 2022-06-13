@@ -12,6 +12,7 @@ from randblend.description import (
     Pose,
 )
 from randblend.gso_dataset import get_all_gso_names, get_gso_names_by_shape
+from randblend.path import TemporaryDataPaths
 from randblend.predicate import (
     IsTouchingPredicate,
     compute_predicates_for_spawned_objects,
@@ -79,9 +80,11 @@ for i in range(50):
     update_spawned_object_descriptions()
 
 preds = compute_predicates_for_spawned_objects(IsTouchingPredicate)
-with open("/tmp/predicates-{}.json".format(scene_id), "wb") as f:
+
+temps = TemporaryDataPaths.random("touching")
+with temps.predicate_path.open(mode="wb") as f:
     pickle.dump(preds, f)
 
 pickle_str = serialize_spawned_object_to_pickle()
-with open("/tmp/scene_description-{}.json".format(scene_id), "wb") as f:
+with temps.descriptions_path.open(mode="wb") as f:
     f.write(pickle_str)

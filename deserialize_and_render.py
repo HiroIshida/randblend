@@ -1,4 +1,5 @@
 import os
+import pickle
 import sys
 
 working_dir_path = os.path.dirname(os.path.abspath(__file__))
@@ -12,12 +13,12 @@ import random
 import bpy
 import bpycv
 import cv2
-import numpy as np
 
 import randblend.utils as utils
-from randblend.blender_object import BlenderWorld, FileBasedMaterial
+from randblend.blender_object import BlenderWorld, FileBasedMaterial, get_inst_id_map
 from randblend.dataset import Dataset
-from randblend.path import get_texture_metainfo_path
+from randblend.path import TemporaryDataPaths, get_texture_metainfo_path
+from randblend.types import SegmentedImage
 
 if __name__ == "__main__":
     bpycv.clear_all()
@@ -41,35 +42,30 @@ if __name__ == "__main__":
         material_floor, scale=(0.01, 0.01, 0.01)
     )
 
-    bw = BlenderWorld.from_pickle_file("/tmp/randblend.json")
-    # bw["table"].set_material(fbmat_wood)
+    temp = TemporaryDataPaths.get_latest_temp("touching")
+
+    bw = BlenderWorld.from_pickle_file(str(temp.descriptions_path))
     bw["floor"].set_material(fbmat_carpet)
     bw.spawn_all()
 
     utils.create_area_light(rotation=(0.0, math.pi * 0.1, -math.pi * 0.1), strength=100)
 
     camera = bpy.context.scene.camera
-    camera.location = (-0.0, -0.4, 0.9)
-    camera.rotation_euler = (0.2, 0.0, 0.0)
+    # camera.location = (-0.0, -0.4, 0.9)
+    camera.location = (-0.0, -0.0, 0.9)
+    # camera.rotation_euler = (0.2, 0.0, 0.0)
+    camera.rotation_euler = (0.0, 0.0, 0.0)
     camera.data.lens = 50
     camera.data.sensor_width = 70.0
     camera.data.sensor_height = 60.0
 
-    embed()
     result = bpycv.render_data()
 
-    # save result
-    cv2.imwrite(
-        "demo-rgb.jpg", result["image"][..., ::-1]
-    )  # transfer RGB image to opencv's BGR
+    image = result["image"]
+    segmenation = result["inst"]
+    inst_id_map = get_inst_id_map()
+    segmentation = SegmentedImage(image, segmenation, inst_id_map)
+    with temp.segmentation_path.open(mode="wb") as f:
+        pickle.dump(segmenation, f)
 
-    # save instance map as 16 bit png
-    # the value of each pixel represents the inst_id of the object to which the pixel belongs
-    cv2.imwrite("demo-inst.png", np.uint16(result["inst"]))
-
-    # convert depth units from meters to millimeters
-    depth_in_mm = result["depth"] * 1000
-    cv2.imwrite("demo-depth.png", np.uint16(depth_in_mm))  # save as 16bit png
-
-    # visualization inst_rgb_depth for human
-    cv2.imwrite("demo-vis-inst_rgb_depth-.png", result.vis()[..., ::-1])
+    cv2.imwrite("debug.png", result.vis()[..., ::-1])
