@@ -23,7 +23,7 @@ if __name__ == "__main__":
     bpycv.clear_all()
     bpy.context.scene.frame_set(1)
     bpy.context.scene.render.engine = "CYCLES"
-    bpy.context.scene.cycles.samples = 8
+    bpy.context.scene.cycles.samples = 4
 
     # randomely pick two materials
     yaml_path = get_texture_metainfo_path()
@@ -49,11 +49,13 @@ if __name__ == "__main__":
     utils.create_area_light(rotation=(0.0, math.pi * 0.1, -math.pi * 0.1), strength=100)
 
     camera = bpy.context.scene.camera
-    camera.location = (-0.0, -0.2, 0.9)
-    camera.rotation_euler = (0.4, 0.0, 0.0)
+    camera.location = (-0.0, -0.4, 0.9)
+    camera.rotation_euler = (0.2, 0.0, 0.0)
     camera.data.lens = 50
     camera.data.sensor_width = 70.0
     camera.data.sensor_height = 60.0
+
+    embed()
     result = bpycv.render_data()
 
     # save result

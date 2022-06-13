@@ -1,4 +1,6 @@
+import pickle
 import random
+import uuid
 
 import numpy as np
 import pybullet
@@ -10,6 +12,10 @@ from randblend.description import (
     Pose,
 )
 from randblend.gso_dataset import get_all_gso_names, get_gso_names_by_shape
+from randblend.predicate import (
+    IsTouchingPredicate,
+    compute_predicates_for_spawned_objects,
+)
 from randblend.pybullet_object import (
     CubeObjectBulletObject,
     FileBasedBulletObject,
@@ -21,6 +27,9 @@ from randblend.pybullet_object import (
 # meshes
 containre_gso_names = get_gso_names_by_shape("LargeContainerShape")
 tiny_gso_names = get_gso_names_by_shape("TinyShape")
+
+
+scene_id = str(uuid.uuid4())[-6:]
 
 
 def myrand(a):
@@ -65,13 +74,14 @@ pybullet.setGravity(0, 0, -10.0)
 
 spawn_registered_objects()
 
-
-for i in range(1000):
+for i in range(50):
     pybullet.stepSimulation()
     update_spawned_object_descriptions()
 
-pickle_str = serialize_spawned_object_to_pickle()
-with open("/tmp/randblend.json", "wb") as f:
-    f.write(pickle_str)
+preds = compute_predicates_for_spawned_objects(IsTouchingPredicate)
+with open("/tmp/predicates-{}.json".format(scene_id), "wb") as f:
+    pickle.dump(preds, f)
 
-# time.sleep(100)
+pickle_str = serialize_spawned_object_to_pickle()
+with open("/tmp/scene_description-{}.json".format(scene_id), "wb") as f:
+    f.write(pickle_str)
