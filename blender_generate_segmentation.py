@@ -25,6 +25,8 @@ if __name__ == "__main__":
     bpy.context.scene.frame_set(1)
     bpy.context.scene.render.engine = "CYCLES"
     bpy.context.scene.cycles.samples = 4
+    bpy.context.scene.render.resolution_x = 640
+    bpy.context.scene.render.resolution_y = 480
 
     # randomely pick two materials
     yaml_path = get_texture_metainfo_path()
