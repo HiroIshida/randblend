@@ -16,6 +16,7 @@ import cv2
 
 import randblend.utils as utils
 from randblend.blender_object import BlenderWorld, FileBasedMaterial, get_inst_id_map
+from randblend.blender_raycast import raycast
 from randblend.dataset import Dataset
 from randblend.path import TemporaryDataPaths, get_texture_metainfo_path
 from randblend.types import SegmentedImage
@@ -52,14 +53,28 @@ if __name__ == "__main__":
 
     utils.create_area_light(rotation=(0.0, math.pi * 0.1, -math.pi * 0.1), strength=100)
 
+    bpy.ops.object.empty_add(location=(0.0, 0.0, 0.0))
+    track_obj = bpy.context.object
+    track_obj.name = "track_target_point"
+
     camera = bpy.context.scene.camera
-    # camera.location = (-0.0, -0.4, 0.9)
-    camera.location = (-0.0, -0.0, 0.9)
-    # camera.rotation_euler = (0.2, 0.0, 0.0)
-    camera.rotation_euler = (0.0, 0.0, 0.0)
-    camera.data.lens = 50
-    camera.data.sensor_width = 70.0
-    camera.data.sensor_height = 60.0
+    camera.location = (0.0, -0.4, 0.9)
+    utils.add_track_to_constraint(camera, track_obj)
+
+    # camera.location = (-0.0, -0.0, 0.9)
+    ## camera.rotation_euler = (0.2, 0.0, 0.0)
+    # camera.rotation_euler = (0.0, 0.0, 0.0)
+    # camera.data.lens = 50
+    # camera.data.sensor_width = 70.0
+    # camera.data.sensor_height = 60.0
+
+    dists, segmentation = raycast(camera)
+
+    with open("segmentation.pkl", "wb") as f:
+        pickle.dump(segmentation, f)
+
+    with open("dists.pkl", "wb") as f:
+        pickle.dump(dists, f)
 
     result = bpycv.render_data()
 
